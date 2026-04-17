@@ -31,10 +31,10 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final screens = [
-      const EmployerDashboardTab(),
-      const ManageJobsTab(),
-      const ManageCandidatesScreen(),
-      const CaiDatScreen(isTab: true),
+      EmployerDashboardTab(),        // Đã bỏ const
+      ManageJobsTab(),               // Đã bỏ const
+      ManageCandidatesScreen(),      // Đã bỏ const
+      CaiDatScreen(isTab: true),     // Đã bỏ const
     ];
 
     return Scaffold(
@@ -51,7 +51,13 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
       ),
       floatingActionButton: (_currentIndex == 0 || _currentIndex == 1)
           ? FloatingActionButton(
-              onPressed: () => Navigator.pushNamed(context, '/post-job'),
+              onPressed: () async {
+                // Chờ kết quả từ màn hình đăng tin
+                final result = await Navigator.pushNamed(context, '/post-job');
+                if (result == true && mounted) {
+                  setState(() {}); // Force rebuild toàn bộ để cập nhật danh sách
+                }
+              },
               backgroundColor: const Color(0xFFEB7E35),
               child: const Icon(Icons.add, color: Colors.white),
             )
@@ -203,7 +209,7 @@ class EmployerDashboardTab extends StatelessWidget {
                 children: [
                   _StatCard(
                     label: 'Tin đang đăng',
-                    value: myJobsCount.toString(), // ← động
+                    value: myJobsCount.toString(),
                     icon: Icons.work_outline,
                     color: const Color(0xFFEFF6FF),
                     iconColor: const Color(0xFF1E40AF),
@@ -211,7 +217,7 @@ class EmployerDashboardTab extends StatelessWidget {
                   const SizedBox(width: 12),
                   _StatCard(
                     label: 'Tổng ứng viên',
-                    value: totalApplicants.toString(), // ← động, không hardcode
+                    value: totalApplicants.toString(),
                     icon: Icons.people_outline,
                     color: const Color(0xFFFFF7ED),
                     iconColor: const Color(0xFF9A3412),
@@ -309,7 +315,7 @@ class ManageJobsTab extends StatelessWidget {
               itemBuilder: (context, index) {
                 final job = myJobs[index];
                 final applicantCount =
-                    GlobalData.getApplicantCount(job.id); // ← động
+                    GlobalData.getApplicantCount(job.id);
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),

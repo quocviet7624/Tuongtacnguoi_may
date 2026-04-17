@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'models/global_data.dart';
+import 'services/storage_service.dart'; // ✅ Thêm import
 
 // Luồng 1: Onboarding & Auth
 import 'screens/splash_screen.dart';
@@ -62,13 +63,21 @@ import 'screens/candidate_detail_screen.dart';
 import 'screens/interview_schedule_screen.dart';
 import 'screens/company_profile_edit_screen.dart';
 
-void main() {
-  // ✅ Seed dữ liệu demo MỘT LẦN trước khi chạy app
-  GlobalData.seedDemoData();
+void main() async {  // ✅ Thêm async
+  // ✅ QUAN TRỌNG: Đảm bảo Flutter binding được khởi tạo trước khi dùng native plugins
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // ✅ Khởi tạo SharedPreferences
+  await StorageService.init();
+  
+  // ✅ Load dữ liệu từ storage (KHÔNG còn seedDemoData nữa)
+  await GlobalData.init();
+  
+  // ❌ XÓA: GlobalData.seedDemoData(); 
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => UserProvider(),
+      create: (_) => UserProvider(), // UserProvider giờ tự load currentUser từ storage
       child: const ViecNowApp(),
     ),
   );
@@ -91,10 +100,10 @@ class ViecNowApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.white,
       ),
-      initialRoute: '/',
+      // ✅ Tự động chuyển hướng dựa trên trạng thái đăng nhập
+      home: const AuthWrapper(), // ✅ Thay initialRoute bằng home với AuthWrapper
       routes: {
         // Onboarding
-        '/': (context) => const SplashScreen(),
         '/onboarding1': (context) => const Onboarding1Screen(),
         '/onboarding2': (context) => const Onboarding2Screen(),
         '/who-are-you': (context) => const WhoAreYouScreen(),
@@ -148,7 +157,6 @@ class ViecNowApp extends StatelessWidget {
 
         // NTD
         '/employer-home': (context) {
-          // ✅ Đọc arguments để biết tab nào cần hiển thị
           final args = ModalRoute.of(context)?.settings.arguments;
           int initialTab = 0;
           if (args is Map && args['initialTab'] != null) {
@@ -165,6 +173,31 @@ class ViecNowApp extends StatelessWidget {
       onUnknownRoute: (settings) => MaterialPageRoute(
         builder: (_) => const StudentHomeScreen(),
       ),
+    );
+  }
+}
+
+// ✅ THÊM MỚI: Widget kiểm tra trạng thái đăng nhập
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        // Đang kiểm tra trạng thái / loading
+        if (userProvider.isLoggedIn) {
+          // Đã đăng nhập -> vào app tương ứng role
+          if (userProvider.isEmployer) {
+            return const EmployerHomeScreen();
+          } else {
+            return const StudentHomeScreen();
+          }
+        } else {
+          // Chưa đăng nhập -> Splash/Onboarding
+          return const SplashScreen();
+        }
+      },
     );
   }
 }

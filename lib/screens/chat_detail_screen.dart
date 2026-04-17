@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../models/global_data.dart';
-import '../models/user_model.dart'; // Thêm import này
+import '../models/user_model.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   const ChatDetailScreen({super.key});
@@ -23,20 +23,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
     _conversationId = args?['id'] ?? '';
     _conversation = args ?? {};
-    
+
     final userProvider = Provider.of<UserProvider>(context);
     _currentUser = userProvider.currentUser!;
-    
-    // Xác định người còn lại
-    final otherEmail = _conversation['participant1'] == _currentUser.email 
-        ? _conversation['participant2'] 
+
+    final otherEmail = _conversation['participant1'] == _currentUser.email
+        ? _conversation['participant2']
         : _conversation['participant1'];
-        
-    // Tìm user hoặc tạo placeholder
+
     _otherUser = GlobalData.users.firstWhere(
       (u) => u.email == otherEmail,
       orElse: () => AppUser(
@@ -71,7 +70,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _isTyping = false;
     });
 
-    // Cập nhật tin nhắn cuối trong conversation
     final conv = GlobalData.conversations.firstWhere(
       (c) => c['id'] == _conversationId,
       orElse: () => {},
@@ -79,7 +77,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     if (conv.isNotEmpty) {
       conv['lastMessage'] = text;
       conv['lastMessageTime'] = DateTime.now();
-      // Tăng unread cho người nhận
       if (conv['participant1'] == _currentUser.email) {
         conv['unread2'] = (conv['unread2'] ?? 0) + 1;
       } else {
@@ -97,21 +94,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       }
     });
 
-    // Giả lập phản hồi tự động
     _simulateReply();
   }
 
   void _simulateReply() {
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
-      
+
       final replies = [
         'Cảm ơn bạn đã liên hệ!',
         'Chúng tôi sẽ xem xét và phản hồi sớm.',
         'Bạn có thể cho tôi biết thêm thông tin không?',
         'Rất vui được làm việc với bạn!',
       ];
-      
+
       final reply = {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
         'text': replies[DateTime.now().millisecond % replies.length],
@@ -145,24 +141,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Xác định tên hiển thị
+    // ✅ Dùng displayName getter thay vì truy cập fullName trực tiếp
     String displayName;
     String avatar;
     Color avatarColor;
-    
+
     if (_currentUser.role == UserRole.nhaTuyenDung) {
-      // NTD đang chat với sinh viên
-      displayName = _otherUser.fullName.isNotEmpty ? _otherUser.fullName : 'Ứng viên';
+      displayName = _otherUser.displayName;
       avatar = _getAvatar(displayName);
       avatarColor = _getAvatarColor(displayName);
     } else {
-      // Sinh viên đang chat với NTD
-      displayName = _otherUser.companyName ?? _otherUser.fullName ?? 'Công ty';
+      displayName =
+          _otherUser.companyName ?? _otherUser.fullName ?? 'Công ty';
       avatar = _getAvatar(displayName);
       avatarColor = _getAvatarColor(displayName);
     }
 
-    final isOnline = false;
+    const isOnline = false;
     final jobTitle = _conversation['jobTitle'] ?? '';
 
     return Scaffold(
@@ -172,7 +167,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         elevation: 0,
         titleSpacing: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1F2937), size: 20),
+          icon: const Icon(Icons.arrow_back_ios,
+              color: Color(0xFF1F2937), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -223,7 +219,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 Text(
                   isOnline ? 'Đang hoạt động' : jobTitle,
                   style: TextStyle(
-                    color: isOnline ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF),
+                    color: isOnline
+                        ? const Color(0xFF22C55E)
+                        : const Color(0xFF9CA3AF),
                     fontSize: 12,
                     fontFamily: 'Inter',
                   ),
@@ -234,7 +232,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.phone_outlined, color: Color(0xFFEB7E35)),
+            icon:
+                const Icon(Icons.phone_outlined, color: Color(0xFFEB7E35)),
             onPressed: () {},
           ),
           IconButton(
@@ -249,7 +248,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       ),
       body: Column(
         children: [
-          // Job info card
           if (jobTitle.isNotEmpty)
             Container(
               margin: const EdgeInsets.all(16),
@@ -257,7 +255,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEB7E35).withOpacity(0.3)),
+                border: Border.all(
+                    color: const Color(0xFFEB7E35).withOpacity(0.3)),
               ),
               child: Row(
                 children: [
@@ -277,26 +276,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               ),
             ),
 
-          // Messages
           Expanded(
             child: _messages.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final msg = _messages[index];
-                      final isMe = msg['senderEmail'] == _currentUser.email;
+                      final isMe =
+                          msg['senderEmail'] == _currentUser.email;
 
                       return Column(
                         children: [
                           if (index == 0 || _shouldShowDate(index))
                             _DateSeparator(date: msg['time']),
-                          
                           if (msg['type'] == 'interview_card')
                             _InterviewCard(
-                              data: msg['cardData'], 
+                              data: msg['cardData'],
                               time: _formatMessageTime(msg['time']),
                             )
                           else
@@ -304,8 +303,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               text: msg['text'] as String,
                               isMe: isMe,
                               time: _formatMessageTime(msg['time']),
-                              avatar: isMe ? _getAvatar(_currentUser.fullName) : avatar,
-                              avatarColor: isMe ? const Color(0xFF4B75DE) : avatarColor,
+                              // ✅ Dùng displayName getter, không còn lỗi String?
+                              avatar: isMe
+                                  ? _getAvatar(_currentUser.displayName)
+                                  : avatar,
+                              avatarColor: isMe
+                                  ? const Color(0xFF4B75DE)
+                                  : avatarColor,
                             ),
                           const SizedBox(height: 4),
                         ],
@@ -314,15 +318,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   ),
           ),
 
-          // Input area
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: SafeArea(
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.attach_file, color: Color(0xFF9CA3AF)),
+                    icon: const Icon(Icons.attach_file,
+                        color: Color(0xFF9CA3AF)),
                     onPressed: () {},
                     padding: EdgeInsets.zero,
                   ),
@@ -334,7 +339,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       ),
                       child: TextField(
                         controller: _controller,
-                        onChanged: (v) => setState(() => _isTyping = v.isNotEmpty),
+                        onChanged: (v) =>
+                            setState(() => _isTyping = v.isNotEmpty),
                         decoration: const InputDecoration(
                           hintText: 'Nhập tin nhắn...',
                           hintStyle: TextStyle(
@@ -343,7 +349,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             fontFamily: 'Inter',
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
                         ),
                         maxLines: null,
                       ),
@@ -356,12 +363,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: _isTyping ? const Color(0xFFEB7E35) : const Color(0xFFE5E7EB),
+                        color: _isTyping
+                            ? const Color(0xFFEB7E35)
+                            : const Color(0xFFE5E7EB),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.send_rounded,
-                        color: _isTyping ? Colors.white : const Color(0xFF9CA3AF),
+                        color: _isTyping
+                            ? Colors.white
+                            : const Color(0xFF9CA3AF),
                         size: 20,
                       ),
                     ),
@@ -401,7 +412,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final prev = _messages[index - 1]['time'] as DateTime?;
     final curr = _messages[index]['time'] as DateTime?;
     if (prev == null || curr == null) return false;
-    return prev.day != curr.day || prev.month != curr.month || prev.year != curr.year;
+    return prev.day != curr.day ||
+        prev.month != curr.month ||
+        prev.year != curr.year;
   }
 
   String _getAvatar(String name) {
@@ -437,20 +450,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _OptionItem(
-              icon: Icons.info_outline, 
-              label: 'Xem thông tin ${_currentUser.role == UserRole.nhaTuyenDung ? 'ứng viên' : 'công ty'}', 
+              icon: Icons.info_outline,
+              label:
+                  'Xem thông tin ${_currentUser.role == UserRole.nhaTuyenDung ? 'ứng viên' : 'công ty'}',
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(
-                  context, 
-                  _currentUser.role == UserRole.nhaTuyenDung ? '/ho-so-uv' : '/company-profile',
+                  context,
+                  _currentUser.role == UserRole.nhaTuyenDung
+                      ? '/ho-so-uv'
+                      : '/company-profile',
                 );
               },
             ),
-            _OptionItem(icon: Icons.block, label: 'Chặn', onTap: () => Navigator.pop(context)),
             _OptionItem(
-              icon: Icons.report_outlined, 
-              label: 'Báo cáo', 
+                icon: Icons.block,
+                label: 'Chặn',
+                onTap: () => Navigator.pop(context)),
+            _OptionItem(
+              icon: Icons.report_outlined,
+              label: 'Báo cáo',
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/report-job');
@@ -463,9 +482,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 }
 
+// ── Widgets ────────────────────────────────────────────────────────────────
+
 class _DateSeparator extends StatelessWidget {
   final dynamic date;
-
   const _DateSeparator({required this.date});
 
   @override
@@ -473,9 +493,13 @@ class _DateSeparator extends StatelessWidget {
     String text;
     if (date is DateTime) {
       final now = DateTime.now();
-      if (date.day == now.day && date.month == now.month && date.year == now.year) {
+      if (date.day == now.day &&
+          date.month == now.month &&
+          date.year == now.year) {
         text = 'Hôm nay';
-      } else if (date.day == now.day - 1 && date.month == now.month && date.year == now.year) {
+      } else if (date.day == now.day - 1 &&
+          date.month == now.month &&
+          date.year == now.year) {
         text = 'Hôm qua';
       } else {
         text = '${date.day}/${date.month}/${date.year}';
@@ -523,25 +547,33 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment:
+          isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (!isMe) ...[
           CircleAvatar(
             radius: 14,
             backgroundColor: avatarColor,
-            child: Text(avatar, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+            child: Text(avatar,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 6),
         ],
         Flexible(
           child: Column(
-            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment:
+                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isMe ? const Color(0xFFEB7E35) : Colors.white,
+                  color:
+                      isMe ? const Color(0xFFEB7E35) : Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
@@ -559,7 +591,9 @@ class _MessageBubble extends StatelessWidget {
                 child: Text(
                   text,
                   style: TextStyle(
-                    color: isMe ? Colors.white : const Color(0xFF1F2937),
+                    color: isMe
+                        ? Colors.white
+                        : const Color(0xFF1F2937),
                     fontSize: 14,
                     fontFamily: 'Inter',
                     height: 1.4,
@@ -569,7 +603,10 @@ class _MessageBubble extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 time,
-                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 11, fontFamily: 'Inter'),
+                style: const TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontSize: 11,
+                    fontFamily: 'Inter'),
               ),
             ],
           ),
@@ -589,7 +626,7 @@ class _InterviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data == null) return const SizedBox.shrink();
-    
+
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
@@ -600,7 +637,8 @@ class _InterviewCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFEB7E35).withOpacity(0.3)),
+            border: Border.all(
+                color: const Color(0xFFEB7E35).withOpacity(0.3)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -615,11 +653,13 @@ class _InterviewCard extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(
                   color: Color(0xFFEB7E35),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(12)),
                 ),
                 child: Row(
                   children: const [
-                    Icon(Icons.calendar_today, color: Colors.white, size: 16),
+                    Icon(Icons.calendar_today,
+                        color: Colors.white, size: 16),
                     SizedBox(width: 8),
                     Text(
                       'Lịch phỏng vấn',
@@ -637,22 +677,33 @@ class _InterviewCard extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   children: [
-                    _CardRow(icon: Icons.access_time, label: '${data!['date']} • ${data!['time']}'),
+                    _CardRow(
+                        icon: Icons.access_time,
+                        label:
+                            '${data!['date']} • ${data!['time']}'),
                     const SizedBox(height: 8),
-                    _CardRow(icon: Icons.location_on_outlined, label: data!['location'] ?? 'Chưa cập nhật'),
+                    _CardRow(
+                        icon: Icons.location_on_outlined,
+                        label: data!['location'] ?? 'Chưa cập nhật'),
                     const SizedBox(height: 8),
-                    _CardRow(icon: Icons.person_outline, label: data!['interviewer'] ?? 'Chưa cập nhật'),
+                    _CardRow(
+                        icon: Icons.person_outline,
+                        label:
+                            data!['interviewer'] ?? 'Chưa cập nhật'),
                     const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => Navigator.pushNamed(context, '/interview-schedule'),
+                            onTap: () => Navigator.pushNamed(
+                                context, '/interview-schedule'),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEB7E35),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius:
+                                    BorderRadius.circular(8),
                               ),
                               child: const Center(
                                 child: Text(
@@ -671,10 +722,13 @@ class _InterviewCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8),
                             decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFFE5E7EB)),
-                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: const Color(0xFFE5E7EB)),
+                              borderRadius:
+                                  BorderRadius.circular(8),
                             ),
                             child: const Center(
                               child: Text(
@@ -735,16 +789,15 @@ class _OptionItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _OptionItem({required this.icon, required this.label, required this.onTap});
+  const _OptionItem(
+      {required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: const Color(0xFF374151)),
-      title: Text(
-        label,
-        style: const TextStyle(fontFamily: 'Inter', fontSize: 15),
-      ),
+      title: Text(label,
+          style: const TextStyle(fontFamily: 'Inter', fontSize: 15)),
       onTap: onTap,
     );
   }

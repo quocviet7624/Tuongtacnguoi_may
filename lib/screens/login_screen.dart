@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final success = userProvider.login(email, pass);
+    final success = await userProvider.login(email, pass);
 
     setState(() => _isLoading = false);
 
@@ -108,10 +108,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 13)),
                       SizedBox(height: 4),
-                      Text('👤 Sinh viên: sv@gmail.com / 123456',
+                      Text('Sinh viên: sv@gmail.com / 123456',
                           style:
                               TextStyle(fontSize: 12, color: Colors.black87)),
-                      Text('🏢 Nhà tuyển dụng: ntd@gmail.com / 123456',
+                      Text('Nhà tuyển dụng: ntd@gmail.com / 123456',
                           style:
                               TextStyle(fontSize: 12, color: Colors.black87)),
                     ],

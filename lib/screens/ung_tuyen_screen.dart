@@ -23,7 +23,7 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
     super.dispose();
   }
 
-  void _xuLyUngTuyen(Job job) {
+  void _xuLyUngTuyen(Job job) async {  // ✅ Thêm async
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.currentUser;
 
@@ -39,11 +39,10 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
 
     setState(() => _isSubmitting = true);
 
-    // Lưu vào GlobalData
-    final success = GlobalData.applyForJob(
+    // ✅ SỬA: Chỉ còn 2 tham số + thêm await
+    final success = await GlobalData.applyForJob(
       job.id,
       currentUser.email,
-      job,
     );
 
     setState(() => _isSubmitting = false);
@@ -103,6 +102,7 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ... giữ nguyên phần build ...
     final args = ModalRoute.of(context)?.settings.arguments;
 
     if (args == null || args is! Job) {

@@ -9,17 +9,17 @@ class ManageCandidatesScreen extends StatefulWidget {
   const ManageCandidatesScreen({super.key});
 
   @override
-  State<ManageCandidatesScreen> createState() => _ManageCandidatesScreenState();
+  State<ManageCandidatesScreen> createState() =>
+      _ManageCandidatesScreenState();
 }
 
 class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
-  String? _filterJobId; // null = tất cả jobs
+  String? _filterJobId;
   String _searchQuery = '';
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Nhận jobId từ arguments (từ ManageJobsTab > "Xem >")
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is String && args.isNotEmpty) {
       _filterJobId = args;
@@ -30,9 +30,9 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final currentUser = userProvider.currentUser;
-    final myJobs = GlobalData.getJobsByEmployer(currentUser?.email ?? '');
+    final myJobs =
+        GlobalData.getJobsByEmployer(currentUser?.email ?? '');
 
-    // Xây danh sách ứng viên thực từ GlobalData
     final List<Map<String, dynamic>> allCandidates = [];
 
     for (final job in myJobs) {
@@ -48,23 +48,19 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
             fullName: email,
           ),
         );
-        allCandidates.add({
-          'user': user,
-          'job': job,
-          'email': email,
-        });
+        allCandidates.add({'user': user, 'job': job, 'email': email});
       }
     }
 
-    // Lọc theo search
+    // ✅ Dùng ?. và ?? để tránh lỗi null safety khi filter
     final filtered = allCandidates.where((c) {
       final user = c['user'] as AppUser;
       final job = c['job'] as Job;
       if (_searchQuery.isEmpty) return true;
       final q = _searchQuery.toLowerCase();
-      return (user.fullName.toLowerCase().contains(q)) ||
-          (user.email.toLowerCase().contains(q)) ||
-          (job.title.toLowerCase().contains(q));
+      return (user.fullName?.toLowerCase().contains(q) ?? false) ||
+          user.email.toLowerCase().contains(q) ||
+          job.title.toLowerCase().contains(q);
     }).toList();
 
     return Scaffold(
@@ -76,7 +72,8 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
         automaticallyImplyLeading: true,
         leading: Navigator.of(context).canPop()
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1F2937), size: 20),
+                icon: const Icon(Icons.arrow_back_ios,
+                    color: Color(0xFF1F2937), size: 20),
                 onPressed: () => Navigator.pop(context),
               )
             : null,
@@ -94,7 +91,6 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
       ),
       body: Column(
         children: [
-          // Filter chips theo job
           if (myJobs.isNotEmpty) ...[
             Container(
               color: Colors.white,
@@ -106,7 +102,8 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
                     _JobChip(
                       label: 'Tất cả',
                       isSelected: _filterJobId == null,
-                      onTap: () => setState(() => _filterJobId = null),
+                      onTap: () =>
+                          setState(() => _filterJobId = null),
                     ),
                     const SizedBox(width: 8),
                     ...myJobs.map((job) => Padding(
@@ -115,7 +112,8 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
                             label: job.title,
                             count: GlobalData.getApplicantCount(job.id),
                             isSelected: _filterJobId == job.id,
-                            onTap: () => setState(() => _filterJobId = job.id),
+                            onTap: () => setState(
+                                () => _filterJobId = job.id),
                           ),
                         )),
                   ],
@@ -124,7 +122,6 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
             ),
           ],
 
-          // Search bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -132,39 +129,42 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
               onChanged: (v) => setState(() => _searchQuery = v),
               decoration: InputDecoration(
                 hintText: 'Tìm tên, email ứng viên...',
-                hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF), size: 20),
+                hintStyle: const TextStyle(
+                    color: Color(0xFF9CA3AF), fontSize: 14),
+                prefixIcon: const Icon(Icons.search,
+                    color: Color(0xFF9CA3AF), size: 20),
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
 
-          // Summary
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 '${filtered.length} ứng viên',
-                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                style:
+                    const TextStyle(color: Colors.grey, fontSize: 13),
               ),
             ),
           ),
 
-          // List
           Expanded(
             child: filtered.isEmpty
                 ? _buildEmpty()
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = filtered[index];
                       final user = item['user'] as AppUser;
@@ -176,10 +176,7 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
                           Navigator.pushNamed(
                             context,
                             '/candidate-detail',
-                            arguments: {
-                              'user': user,
-                              'job': job,
-                            },
+                            arguments: {'user': user, 'job': job},
                           );
                         },
                         onChat: () => _openChat(context, user, job),
@@ -193,7 +190,8 @@ class _ManageCandidatesScreenState extends State<ManageCandidatesScreen> {
   }
 
   void _openChat(BuildContext context, AppUser candidate, Job job) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userProvider =
+        Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.currentUser!;
 
     final convId = GlobalData.getOrCreateConversationId(
@@ -258,9 +256,12 @@ class _JobChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEB7E35) : const Color(0xFFF3F4F6),
+          color: isSelected
+              ? const Color(0xFFEB7E35)
+              : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -269,7 +270,9 @@ class _JobChip extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFF6B7280),
+                color: isSelected
+                    ? Colors.white
+                    : const Color(0xFF6B7280),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -277,15 +280,18 @@ class _JobChip extends StatelessWidget {
             if (count != null && count! > 0) ...[
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white24 : const Color(0xFFEB7E35),
+                  color: isSelected
+                      ? Colors.white24
+                      : const Color(0xFFEB7E35),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   '$count',
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.white,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -315,7 +321,8 @@ class _CandidateCard extends StatelessWidget {
 
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    if (parts.length >= 2)
+      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
     return name.isNotEmpty ? name[0].toUpperCase() : 'U';
   }
 
@@ -333,7 +340,8 @@ class _CandidateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = user.fullName.isNotEmpty ? user.fullName : user.email;
+    // ✅ Dùng displayName getter — không bao giờ null
+    final displayName = user.displayName;
     final avatarColor = _getColor(displayName);
 
     return GestureDetector(
@@ -357,17 +365,20 @@ class _CandidateCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Avatar
+                // ✅ Dùng avatarFile getter từ model
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: avatarColor,
-                  backgroundImage:
-                      user.avatarFile != null ? FileImage(user.avatarFile!) : null,
+                  backgroundImage: user.avatarFile != null
+                      ? FileImage(user.avatarFile!)
+                      : null,
                   child: user.avatarFile == null
                       ? Text(
                           _getInitials(displayName),
                           style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14),
                         )
                       : null,
                 ),
@@ -379,17 +390,19 @@ class _CandidateCard extends StatelessWidget {
                       Text(
                         displayName,
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827)),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         user.email,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF9CA3AF)),
                       ),
                     ],
                   ),
                 ),
-                // Nhắn tin nhanh
                 GestureDetector(
                   onTap: onChat,
                   child: Container(
@@ -409,13 +422,13 @@ class _CandidateCard extends StatelessWidget {
             const Divider(height: 1, color: Color(0xFFF3F4F6)),
             const SizedBox(height: 10),
 
-            // Thông tin học vấn
             _InfoChip(
                 icon: Icons.school_outlined,
                 label: user.school ?? 'Chưa cập nhật trường'),
             const SizedBox(height: 6),
             _InfoChip(
-                icon: Icons.work_outline, label: 'Ứng tuyển: ${job.title}'),
+                icon: Icons.work_outline,
+                label: 'Ứng tuyển: ${job.title}'),
 
             if (user.skills != null && user.skills!.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -424,15 +437,18 @@ class _CandidateCard extends StatelessWidget {
                 runSpacing: 4,
                 children: user.skills!.take(4).map((skill) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF0F9FF),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFBAE6FD)),
+                      border:
+                          Border.all(color: const Color(0xFFBAE6FD)),
                     ),
                     child: Text(
                       skill,
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF0369A1)),
+                      style: const TextStyle(
+                          fontSize: 11, color: Color(0xFF0369A1)),
                     ),
                   );
                 }).toList(),
@@ -443,27 +459,30 @@ class _CandidateCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.star, size: 14, color: Color(0xFFEAB308)),
+                  const Icon(Icons.star,
+                      size: 14, color: Color(0xFFEAB308)),
                   const SizedBox(width: 4),
                   Text('GPA: ${user.gpa!.toStringAsFixed(1)}',
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF374151))),
+                      style: const TextStyle(
+                          fontSize: 13, color: Color(0xFF374151))),
                 ],
               ),
             ],
 
             const SizedBox(height: 10),
 
-            // Action buttons
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onChat,
-                    icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                    icon: const Icon(Icons.chat_bubble_outline,
+                        size: 16),
                     label: const Text('Nhắn tin'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFEB7E35),
-                      side: const BorderSide(color: Color(0xFFEB7E35)),
+                      side:
+                          const BorderSide(color: Color(0xFFEB7E35)),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -474,7 +493,8 @@ class _CandidateCard extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: onTap,
-                    icon: const Icon(Icons.visibility_outlined, size: 16),
+                    icon: const Icon(Icons.visibility_outlined,
+                        size: 16),
                     label: const Text('Xem hồ sơ'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEB7E35),
@@ -508,7 +528,8 @@ class _InfoChip extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            style: const TextStyle(
+                fontSize: 13, color: Color(0xFF6B7280)),
             overflow: TextOverflow.ellipsis,
           ),
         ),

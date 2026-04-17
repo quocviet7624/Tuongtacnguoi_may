@@ -24,8 +24,8 @@ class _ChinhSuaHoSoScreenState extends State<ChinhSuaHoSoScreen> {
     super.initState();
     final user = context.read<UserProvider>().currentUser;
     if (user != null) {
-      _hoTenCtrl.text  = user.fullName;
-      _sdtCtrl.text    = user.phone;
+      _hoTenCtrl.text = user.fullName ?? '';
+      _sdtCtrl.text   = user.phone ?? '';
       _truongCtrl.text = user.school ?? '';
       _nganhCtrl.text  = user.major ?? '';
       _gpaCtrl.text    = user.gpa?.toString() ?? '';

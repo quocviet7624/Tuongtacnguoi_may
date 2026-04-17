@@ -53,32 +53,33 @@ class _RegisterSvStep3ScreenState extends State<RegisterSvStep3Screen> {
   }
 
   // --- HÀM XỬ LÝ KHI NHẤN HOÀN TẤT ---
-  void _onComplete() {
-    if (_selectedSkills.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ít nhất 1 kỹ năng')),
-      );
-      return;
-    }
-
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    
-    // ĐÃ SỬA: Gọi updateFinalStep thay vì updateProfile
-    userProvider.updateFinalStep(
-      newSkills: _selectedSkills.toList(),
-      newAvatar: _imageFile,
-    );
-
+void _onComplete() async {  // ✅ Thêm async
+  if (_selectedSkills.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đăng ký hồ sơ thành công!'),
-        backgroundColor: Colors.green,
-      ),
+      const SnackBar(content: Text('Vui lòng chọn ít nhất 1 kỹ năng')),
     );
-    
-    // Điều hướng về Home và xóa sạch lịch sử Stack đăng ký
-    Navigator.pushNamedAndRemoveUntil(context, '/student-home', (route) => false); 
+    return;
   }
+
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  
+  await userProvider.updateFinalStep(  // ✅ Thêm await
+    newSkills: _selectedSkills.toList(),
+    newAvatar: _imageFile,
+    salaryMin: _luongMin,      // ✅ Thêm các trường còn thiếu
+    salaryMax: _luongMax,
+    availableTime: _thoiGianSelected.toList(),
+  );
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Đăng ký hồ sơ thành công!'),
+      backgroundColor: Colors.green,
+    ),
+  );
+  
+  Navigator.pushNamedAndRemoveUntil(context, '/student-home', (route) => false); 
+}
 
   @override
   Widget build(BuildContext context) {

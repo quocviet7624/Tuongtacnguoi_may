@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Job {
   final String id;
   final String title;
@@ -30,6 +32,44 @@ class Job {
   })  : id = id ??
             '${DateTime.now().millisecondsSinceEpoch}_${employerEmail.hashCode.abs()}',
         postedDate = postedDate ?? DateTime.now();
+
+  // ✅ THÊM: Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'company': company,
+      'salary': salary,
+      'location': location,
+      'description': description,
+      'requirements': requirements,
+      'category': category,
+      'shift': shift,
+      'quantity': quantity,
+      'employerEmail': employerEmail,
+      'postedDate': postedDate.toIso8601String(),
+      'status': status,
+    };
+  }
+
+  // ✅ THÊM: Create from JSON
+  factory Job.fromJson(Map<String, dynamic> json) {
+    return Job(
+      id: json['id'],
+      title: json['title'],
+      company: json['company'],
+      salary: json['salary'],
+      location: json['location'],
+      description: json['description'],
+      requirements: json['requirements'],
+      category: json['category'],
+      shift: json['shift'],
+      quantity: json['quantity'],
+      employerEmail: json['employerEmail'],
+      postedDate: DateTime.parse(json['postedDate']),
+      status: json['status'] ?? 'Đang hiển thị',
+    );
+  }
 
   String get postedDateFormatted {
     final diff = DateTime.now().difference(postedDate).inDays;

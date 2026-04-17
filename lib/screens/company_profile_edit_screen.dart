@@ -22,14 +22,14 @@ class _CompanyProfileEditScreenState
   @override
   void initState() {
     super.initState();
-    // ✅ Load dữ liệu thật từ Provider vào các field
     final user =
         Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user != null) {
       _nameCtrl.text = user.companyName ?? '';
       _typeCtrl.text = user.businessType ?? '';
       _addressCtrl.text = user.address ?? '';
-      _phoneCtrl.text = user.phone;
+      // ✅ Dùng ?? '' để tránh lỗi String? → String
+      _phoneCtrl.text = user.phone ?? '';
       _taxCtrl.text = user.taxCode ?? '';
     }
   }
@@ -46,16 +46,24 @@ class _CompanyProfileEditScreenState
   }
 
   void _save() {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userProvider =
+        Provider.of<UserProvider>(context, listen: false);
     userProvider.updateProfile(
-      companyName: _nameCtrl.text.trim().isEmpty ? null : _nameCtrl.text.trim(),
-      businessType:
-          _typeCtrl.text.trim().isEmpty ? null : _typeCtrl.text.trim(),
+      companyName: _nameCtrl.text.trim().isEmpty
+          ? null
+          : _nameCtrl.text.trim(),
+      businessType: _typeCtrl.text.trim().isEmpty
+          ? null
+          : _typeCtrl.text.trim(),
       address: _addressCtrl.text.trim().isEmpty
           ? null
           : _addressCtrl.text.trim(),
-      phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-      taxCode: _taxCtrl.text.trim().isEmpty ? null : _taxCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim().isEmpty
+          ? null
+          : _phoneCtrl.text.trim(),
+      taxCode: _taxCtrl.text.trim().isEmpty
+          ? null
+          : _taxCtrl.text.trim(),
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -104,18 +112,20 @@ class _CompanyProfileEditScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar công ty
             Center(
               child: Column(
                 children: [
                   Consumer<UserProvider>(
                     builder: (_, provider, __) {
-                      final name = provider.currentUser?.companyName ?? 'C';
+                      final name =
+                          provider.currentUser?.companyName ?? 'C';
                       return CircleAvatar(
                         radius: 44,
                         backgroundColor: const Color(0xFFEB7E35),
                         child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : 'C',
+                          name.isNotEmpty
+                              ? name[0].toUpperCase()
+                              : 'C',
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 32,
@@ -142,7 +152,8 @@ class _CompanyProfileEditScreenState
             const SizedBox(height: 8),
 
             _FieldLabel('Tên công ty'),
-            _InputBox(controller: _nameCtrl, hint: 'Nhập tên công ty'),
+            _InputBox(
+                controller: _nameCtrl, hint: 'Nhập tên công ty'),
             const SizedBox(height: 16),
 
             _FieldLabel('Loại hình kinh doanh'),
@@ -170,7 +181,8 @@ class _CompanyProfileEditScreenState
             _FieldLabel('Giới thiệu công ty'),
             _TextAreaBox(
                 controller: _descCtrl,
-                hint: 'Mô tả về công ty, văn hóa, lĩnh vực hoạt động...'),
+                hint:
+                    'Mô tả về công ty, văn hóa, lĩnh vực hoạt động...'),
 
             const SizedBox(height: 32),
             SizedBox(
@@ -230,7 +242,9 @@ class _InputBox extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
-            color: Color(0xFF8E8E8D), fontSize: 14, fontFamily: 'Inter'),
+            color: Color(0xFF8E8E8D),
+            fontSize: 14,
+            fontFamily: 'Inter'),
         filled: true,
         fillColor: const Color(0xFFFAF9F7),
         contentPadding:
@@ -243,8 +257,8 @@ class _InputBox extends StatelessWidget {
             borderSide: const BorderSide(color: Color(0xFFE2E2E0))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide:
-                const BorderSide(color: Color(0xFFEB7E35), width: 1.5)),
+            borderSide: const BorderSide(
+                color: Color(0xFFEB7E35), width: 1.5)),
       ),
     );
   }
@@ -253,7 +267,8 @@ class _InputBox extends StatelessWidget {
 class _TextAreaBox extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
-  const _TextAreaBox({required this.controller, required this.hint});
+  const _TextAreaBox(
+      {required this.controller, required this.hint});
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +279,9 @@ class _TextAreaBox extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
-            color: Color(0xFF8E8E8D), fontSize: 14, fontFamily: 'Inter'),
+            color: Color(0xFF8E8E8D),
+            fontSize: 14,
+            fontFamily: 'Inter'),
         filled: true,
         fillColor: const Color(0xFFFAF8F6),
         contentPadding:
@@ -277,8 +294,8 @@ class _TextAreaBox extends StatelessWidget {
             borderSide: const BorderSide(color: Color(0xFFE9E8E5))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                const BorderSide(color: Color(0xFFEB7E35), width: 1.5)),
+            borderSide: const BorderSide(
+                color: Color(0xFFEB7E35), width: 1.5)),
       ),
     );
   }

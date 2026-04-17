@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
@@ -8,13 +9,14 @@ class HoSoSVScreen extends StatelessWidget {
   int _calculateCompletion(dynamic user) {
     if (user == null) return 0;
     int score = 0;
-    if (user.email.isNotEmpty) score += 20;
-    if (user.fullName.isNotEmpty) score += 15;
-    if (user.phone.isNotEmpty) score += 10;
-    if (user.school != null && user.school!.isNotEmpty) score += 10;
-    if (user.major != null && user.major!.isNotEmpty) score += 10;
+    // email luôn có (non-nullable)
+    score += 20;
+    if (user.fullName?.isNotEmpty == true) score += 15;
+    if (user.phone?.isNotEmpty == true) score += 10;
+    if (user.school?.isNotEmpty == true) score += 10;
+    if (user.major?.isNotEmpty == true) score += 10;
     if (user.gpa != null && user.gpa! > 0) score += 10;
-    if (user.skills != null && user.skills!.isNotEmpty) score += 15;
+    if (user.skills?.isNotEmpty == true) score += 15;
     if (user.avatarFile != null) score += 10;
     return score > 100 ? 100 : score;
   }
@@ -30,11 +32,16 @@ class HoSoSVScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/student-home', (route) => false);
+          },
+        ),
         title: const Text('Hồ sơ của tôi',
             style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 18)),
+                color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Color(0xFFEB7E35)),
@@ -47,7 +54,7 @@ class HoSoSVScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
 
-            // ── Avatar ──────────────────────────────────────────────────────
+            // Avatar
             Center(
               child: Stack(
                 children: [
@@ -62,9 +69,11 @@ class HoSoSVScreen extends StatelessWidget {
                         : null,
                   ),
                   Positioned(
-                    bottom: 0, right: 0,
+                    bottom: 0,
+                    right: 0,
                     child: GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/chinh-sua-ho-so'),
+                      onTap: () =>
+                          Navigator.pushNamed(context, '/chinh-sua-ho-so'),
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
@@ -81,16 +90,12 @@ class HoSoSVScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             Text(
-              user?.fullName.isNotEmpty == true
-                  ? user!.fullName
-                  : 'Chưa cập nhật tên',
+              user?.displayName ?? 'Chưa cập nhật tên',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              user?.school?.isNotEmpty == true
-                  ? user!.school!
-                  : 'Chưa cập nhật trường',
+              user?.school?.isNotEmpty == true ? user!.school! : 'Chưa cập nhật trường',
               style: const TextStyle(fontSize: 15, color: Colors.black54),
             ),
             const SizedBox(height: 6),
@@ -101,7 +106,7 @@ class HoSoSVScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ── Độ hoàn thiện ────────────────────────────────────────────────
+            // Độ hoàn thiện hồ sơ
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -133,8 +138,7 @@ class HoSoSVScreen extends StatelessWidget {
                         completion < 50
                             ? 'Hãy cập nhật thêm thông tin để tìm việc tốt hơn!'
                             : 'Gần hoàn thiện rồi, thêm vài thông tin nữa nhé!',
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.grey),
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ),
                 ],
@@ -143,32 +147,36 @@ class HoSoSVScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ── Thông tin cá nhân ────────────────────────────────────────────
+            // Thông tin cá nhân
             _sectionHeader('Thông tin cá nhân', context, '/chinh-sua-ho-so'),
-            _infoRow(Icons.phone, 'Số điện thoại',
-                user?.phone.isNotEmpty == true ? user!.phone : 'Chưa cập nhật'),
+            _infoRow(Icons.phone, 'Số điện thoại', user?.displayPhone ?? 'Chưa cập nhật'),
             _infoRow(Icons.email_outlined, 'Email', user?.email ?? ''),
 
             const SizedBox(height: 8),
 
-            // ── Học vấn ──────────────────────────────────────────────────────
+            // Học vấn
             _sectionHeader('Học vấn', context, '/chinh-sua-ho-so'),
             _infoRow(Icons.school_outlined, 'Trường',
                 user?.school ?? 'Chưa cập nhật'),
             _infoRow(Icons.book_outlined, 'Chuyên ngành',
                 user?.major ?? 'Chưa cập nhật'),
-            _infoRow(Icons.grade_outlined, 'GPA',
-                user?.gpa != null ? '${user!.gpa!.toStringAsFixed(1)} / 4.0' : 'Chưa cập nhật'),
+            _infoRow(
+                Icons.grade_outlined,
+                'GPA',
+                user?.gpa != null
+                    ? '${user!.gpa!.toStringAsFixed(1)} / 4.0'
+                    : 'Chưa cập nhật'),
 
             const SizedBox(height: 8),
 
-            // ── Kỹ năng ──────────────────────────────────────────────────────
+            // Kỹ năng
             _sectionHeader('Kỹ năng', context, '/chinh-sua-ho-so'),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: user?.skills?.isNotEmpty == true
+              child: (user?.skills?.isNotEmpty == true)
                   ? Wrap(
-                      spacing: 8, runSpacing: 8,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: user!.skills!.map((s) => Chip(
                             label: Text(s,
                                 style: const TextStyle(color: Colors.white)),
@@ -184,7 +192,7 @@ class HoSoSVScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ── Nút hành động ────────────────────────────────────────────────
+            // Nút hành động
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -193,7 +201,8 @@ class HoSoSVScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 52,
                     child: OutlinedButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, '/cv-cua-toi'),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/cv-cua-toi'),
                       icon: const Icon(Icons.description_outlined,
                           color: Color(0xFF4779BB)),
                       label: const Text('Xem CV của tôi',

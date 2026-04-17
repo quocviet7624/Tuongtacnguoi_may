@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
@@ -19,8 +20,7 @@ class CvCuaToiScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('CV của tôi',
-            style: TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold)),
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Column(
@@ -31,7 +31,7 @@ class CvCuaToiScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Header CV ──────────────────────────────────────────
+                  // Header CV
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -58,9 +58,7 @@ class CvCuaToiScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user?.fullName.isNotEmpty == true
-                                    ? user!.fullName
-                                    : 'Chưa cập nhật',
+                                user?.displayName ?? 'Chưa cập nhật',
                                 style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
@@ -87,31 +85,30 @@ class CvCuaToiScreen extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // ── Thông tin liên hệ ──────────────────────────────────
+                  // Thông tin liên hệ
                   _cvSection('Thông tin liên hệ', [
-                    _cvRow(Icons.phone, user?.phone.isNotEmpty == true
-                        ? user!.phone
-                        : 'Chưa cập nhật'),
+                    _cvRow(Icons.phone, user?.displayPhone ?? 'Chưa cập nhật'),
                     _cvRow(Icons.email_outlined, user?.email ?? ''),
                   ]),
 
-                  // ── Học vấn ────────────────────────────────────────────
+                  // Học vấn
                   _cvSection('Học vấn', [
-                    if (user?.school != null && user!.school!.isNotEmpty)
-                      _cvRow(Icons.school_outlined, user.school!),
-                    if (user?.major != null && user!.major!.isNotEmpty)
-                      _cvRow(Icons.book_outlined, user.major!),
+                    if (user?.school?.isNotEmpty == true)
+                      _cvRow(Icons.school_outlined, user!.school!),
+                    if (user?.major?.isNotEmpty == true)
+                      _cvRow(Icons.book_outlined, user!.major!),
                     if (user?.gpa != null)
                       _cvRow(Icons.grade_outlined,
                           'GPA: ${user!.gpa!.toStringAsFixed(1)} / 4.0'),
                   ]),
 
-                  // ── Kỹ năng ───────────────────────────────────────────
+                  // Kỹ năng
                   _cvSectionTitle('Kỹ năng'),
                   const SizedBox(height: 8),
-                  user?.skills?.isNotEmpty == true
+                  (user?.skills?.isNotEmpty == true)
                       ? Wrap(
-                          spacing: 8, runSpacing: 8,
+                          spacing: 8,
+                          runSpacing: 8,
                           children: user!.skills!.map((s) => Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 8),
@@ -130,7 +127,7 @@ class CvCuaToiScreen extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // ── Mức lương mong muốn ────────────────────────────────
+                  // Mức lương mong muốn
                   if (user?.salaryMin != null || user?.salaryMax != null)
                     _cvSection('Mức lương mong muốn', [
                       _cvRow(Icons.monetization_on_outlined,
@@ -141,7 +138,7 @@ class CvCuaToiScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Bottom buttons ─────────────────────────────────────────────
+          // Bottom buttons
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -217,9 +214,7 @@ class CvCuaToiScreen extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: Colors.grey[600]),
           const SizedBox(width: 10),
-          Expanded(
-              child: Text(text,
-                  style: const TextStyle(fontSize: 14))),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );

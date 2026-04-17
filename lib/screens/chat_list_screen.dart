@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../models/global_data.dart';
-import '../models/user_model.dart'; // Thêm import này
+import '../models/user_model.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -26,58 +26,55 @@ class _ChatListScreenState extends State<ChatListScreen> {
       );
     }
 
-    // Lấy danh sách cuộc trò chuyện thật
-    final conversations = GlobalData.getConversationsForUser(currentUser.email);
-    
-    // Lọc theo search và filter
+    final conversations =
+        GlobalData.getConversationsForUser(currentUser.email);
+
     var filteredConversations = conversations.where((c) {
-      final otherUser = c['participant1'] == currentUser.email 
-          ? c['participant2'] 
+      final otherUser = c['participant1'] == currentUser.email
+          ? c['participant2']
           : c['participant1'];
       final userInfo = GlobalData.users.firstWhere(
         (u) => u.email == otherUser,
         orElse: () => _createPlaceholderUser(otherUser as String),
       );
-      
-      final name = userInfo.fullName.isNotEmpty ? userInfo.fullName : otherUser;
+
+      // ✅ Dùng displayName getter thay vì fullName trực tiếp
+      final name = userInfo.displayName;
       final jobTitle = c['jobTitle'] ?? '';
-      
+
       final matchesSearch = _searchQuery.isEmpty ||
-          name.toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           jobTitle.toString().toLowerCase().contains(_searchQuery.toLowerCase());
-      
+
       final hasUnread = (c['unread'] ?? 0) > 0;
       final matchesFilter = _filter == 'Tất cả' ||
           (_filter == 'Chưa đọc' && hasUnread) ||
           (_filter == 'Đã đọc' && !hasUnread);
-      
+
       return matchesSearch && matchesFilter;
     }).toList();
 
-    // Chuyển đổi sang format hiển thị
     final displayConversations = filteredConversations.map((c) {
-      final otherUserEmail = c['participant1'] == currentUser.email 
-          ? c['participant2'] 
+      final otherUserEmail = c['participant1'] == currentUser.email
+          ? c['participant2']
           : c['participant1'];
       final userInfo = GlobalData.users.firstWhere(
         (u) => u.email == otherUserEmail,
         orElse: () => _createPlaceholderUser(otherUserEmail as String),
       );
-      
-      // Lấy tin nhắn cuối cùng
+
       final msgs = GlobalData.getMessages(c['id']);
       final lastMsg = msgs.isNotEmpty ? msgs.last : null;
-      
-      // Xác định tên hiển thị
+
+      // ✅ Dùng displayName getter, không còn lỗi String?
       String displayName;
       if (currentUser.role == UserRole.nhaTuyenDung) {
-        // NTD xem tên sinh viên
-        displayName = userInfo.fullName.isNotEmpty ? userInfo.fullName : 'Ứng viên';
+        displayName = userInfo.displayName;
       } else {
-        // Sinh viên xem tên công ty
-        displayName = userInfo.companyName ?? userInfo.fullName ?? 'Công ty';
+        displayName =
+            userInfo.companyName ?? userInfo.fullName ?? 'Công ty';
       }
-      
+
       return {
         'id': c['id'],
         'name': displayName,
@@ -110,26 +107,29 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1F2937), size: 20),
+          icon: const Icon(Icons.arrow_back_ios,
+              color: Color(0xFF1F2937), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Color(0xFFEB7E35)),
+            icon: const Icon(Icons.edit_outlined,
+                color: Color(0xFFEB7E35)),
             onPressed: () => _startNewConversation(context),
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: const Color(0xFFE5E7EB)),
+          child:
+              Container(height: 1, color: const Color(0xFFE5E7EB)),
         ),
       ),
       body: Column(
         children: [
-          // Search bar
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: TextField(
               onChanged: (v) => setState(() => _searchQuery = v),
               decoration: InputDecoration(
@@ -139,38 +139,39 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   fontSize: 15,
                   fontFamily: 'Inter',
                 ),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF), size: 20),
+                prefixIcon: const Icon(Icons.search,
+                    color: Color(0xFF9CA3AF), size: 20),
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
 
-          // Filter chips
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Row(
               children: [
                 _FilterChip(
-                  label: 'Tất cả', 
+                  label: 'Tất cả',
                   isSelected: _filter == 'Tất cả',
                   onTap: () => setState(() => _filter = 'Tất cả'),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Chưa đọc', 
+                  label: 'Chưa đọc',
                   isSelected: _filter == 'Chưa đọc',
                   onTap: () => setState(() => _filter = 'Chưa đọc'),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Đã đọc', 
+                  label: 'Đã đọc',
                   isSelected: _filter == 'Đã đọc',
                   onTap: () => setState(() => _filter = 'Đã đọc'),
                 ),
@@ -180,7 +181,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
           const SizedBox(height: 8),
 
-          // Conversation list
           Expanded(
             child: displayConversations.isEmpty
                 ? _buildEmptyState()
@@ -192,7 +192,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       return _ConversationTile(
                         conversation: conv,
                         onTap: () {
-                          _markAsRead(conv['id']);
+                          _markAsRead(conv['id'] as String);
                           Navigator.pushNamed(
                             context,
                             '/chat-detail',
@@ -213,7 +213,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.chat_bubble_outline, size: 60, color: Colors.grey[300]),
+          Icon(Icons.chat_bubble_outline,
+              size: 60, color: Colors.grey[300]),
           const SizedBox(height: 12),
           Text(
             'Chưa có cuộc trò chuyện nào',
@@ -234,9 +235,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       (c) => c['id'] == conversationId,
       orElse: () => {},
     );
-    if (conv.isNotEmpty) {
-      conv['unread'] = 0;
-    }
+    if (conv.isNotEmpty) conv['unread'] = 0;
   }
 
   void _startNewConversation(BuildContext context) {
@@ -244,7 +243,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Bắt đầu cuộc trò chuyện'),
-        content: const Text('Tính năng đang phát triển. Cuộc trò chuyện tự động tạo khi có ứng tuyển.'),
+        content: const Text(
+            'Tính năng đang phát triển. Cuộc trò chuyện tự động tạo khi có ứng tuyển.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -255,12 +255,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 
-  // Tạo placeholder user với đầy đủ tham số required
   AppUser _createPlaceholderUser(String email) {
     return AppUser(
       email: email,
       password: '',
-      role: UserRole.sinhVien, // Default role
+      role: UserRole.sinhVien,
       fullName: email,
     );
   }
@@ -290,7 +289,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
     if (time == null) return '';
     if (time is DateTime) {
       final now = DateTime.now();
-      if (time.day == now.day && time.month == now.month && time.year == now.year) {
+      if (time.day == now.day &&
+          time.month == now.month &&
+          time.year == now.year) {
         return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       }
       return '${time.day}/${time.month}';
@@ -305,7 +306,7 @@ class _FilterChip extends StatelessWidget {
   final VoidCallback onTap;
 
   const _FilterChip({
-    required this.label, 
+    required this.label,
     required this.isSelected,
     required this.onTap,
   });
@@ -315,15 +316,19 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEB7E35) : const Color(0xFFF3F4F6),
+          color: isSelected
+              ? const Color(0xFFEB7E35)
+              : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF6B7280),
+            color:
+                isSelected ? Colors.white : const Color(0xFF6B7280),
             fontSize: 13,
             fontWeight: FontWeight.w500,
             fontFamily: 'Inter',
@@ -338,7 +343,8 @@ class _ConversationTile extends StatelessWidget {
   final Map<String, dynamic> conversation;
   final VoidCallback onTap;
 
-  const _ConversationTile({required this.conversation, required this.onTap});
+  const _ConversationTile(
+      {required this.conversation, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -355,7 +361,8 @@ class _ConversationTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 26,
-                  backgroundColor: conversation['avatarColor'] as Color,
+                  backgroundColor:
+                      conversation['avatarColor'] as Color,
                   child: Text(
                     conversation['avatar'] as String,
                     style: const TextStyle(
@@ -376,34 +383,39 @@ class _ConversationTile extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF22C55E),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border:
+                            Border.all(color: Colors.white, width: 2),
                       ),
                     ),
                   ),
               ],
             ),
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         conversation['name'] as String,
                         style: TextStyle(
                           color: const Color(0xFF1F2937),
                           fontSize: 15,
-                          fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: hasUnread
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           fontFamily: 'Inter',
                         ),
                       ),
                       Text(
                         conversation['time'] as String,
                         style: TextStyle(
-                          color: hasUnread ? const Color(0xFFEB7E35) : const Color(0xFF9CA3AF),
+                          color: hasUnread
+                              ? const Color(0xFFEB7E35)
+                              : const Color(0xFF9CA3AF),
                           fontSize: 12,
                           fontFamily: 'Inter',
                         ),
@@ -422,7 +434,8 @@ class _ConversationTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
@@ -430,9 +443,13 @@ class _ConversationTile extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: hasUnread ? const Color(0xFF374151) : const Color(0xFF9CA3AF),
+                            color: hasUnread
+                                ? const Color(0xFF374151)
+                                : const Color(0xFF9CA3AF),
                             fontSize: 13,
-                            fontWeight: hasUnread ? FontWeight.w500 : FontWeight.w400,
+                            fontWeight: hasUnread
+                                ? FontWeight.w500
+                                : FontWeight.w400,
                             fontFamily: 'Inter',
                           ),
                         ),

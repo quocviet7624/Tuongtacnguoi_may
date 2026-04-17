@@ -36,28 +36,27 @@ class _RegisterSvStep2ScreenState extends State<RegisterSvStep2Screen> {
     super.dispose();
   }
 
-  void _next() {
-    if (!_formKey.currentState!.validate()) return;
+  void _next() async { 
+  if (!_formKey.currentState!.validate()) return;
 
-    double gpa = double.tryParse(_gpaCtrl.text.trim()) ?? 0.0;
-    if (gpa < 0 || gpa > 4.0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('GPA phải từ 0.0 đến 4.0'), behavior: SnackBarBehavior.floating),
-      );
-      return;
-    }
-
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    userProvider.updateStudentInfo(
-      fullName: _nameCtrl.text.trim(),
-      school: _selectedSchool ?? _schoolCtrl.text.trim(),
-      major: _majorCtrl.text.trim(),
-      gpa: gpa,
+  double gpa = double.tryParse(_gpaCtrl.text.trim()) ?? 0.0;
+  if (gpa < 0 || gpa > 4.0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('GPA phải từ 0.0 đến 4.0'), behavior: SnackBarBehavior.floating),
     );
-
-    Navigator.pushNamed(context, '/register-sv-3');
+    return;
   }
 
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  await userProvider.updateStudentInfo( 
+    fullName: _nameCtrl.text.trim(),
+    school: _selectedSchool ?? _schoolCtrl.text.trim(),
+    major: _majorCtrl.text.trim(),
+    gpa: gpa,
+  );
+
+  Navigator.pushNamed(context, '/register-sv-3');
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

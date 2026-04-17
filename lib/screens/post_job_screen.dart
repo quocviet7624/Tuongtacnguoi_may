@@ -57,7 +57,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
     setState(() => _currentStep = 0);
   }
 
-  void _submitJob() {
+  void _submitJob() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.currentUser;
 
@@ -87,19 +87,23 @@ class _PostJobScreenState extends State<PostJobScreen> {
       employerEmail: currentUser.email,
     );
 
-    GlobalData.addJob(newJob);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ Đăng tin thành công!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-
-    // ✅ Pop về màn trước (employer-home), KHÔNG dùng popUntil isFirst
-    // vì isFirst sẽ về splash/login
-    Navigator.pop(context);
+    try {
+      await GlobalData.addJob(newJob);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Đăng tin thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        // Trả về true để báo thành công
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      print('Lỗi khi lưu job: $e');
+      if (mounted) _showSnack('Lỗi lưu dữ liệu: $e');
+    }
   }
 
   void _showSnack(String msg) {

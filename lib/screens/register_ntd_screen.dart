@@ -43,41 +43,41 @@ class _RegisterNtdScreenState extends State<RegisterNtdScreen> {
     super.dispose();
   }
 
-  void _handleRegister() {
-    if (!_formKey.currentState!.validate()) return;
-    if (_loaiHinh == null) {
-      _showSnack('Vui lòng chọn loại hình công ty');
-      return;
-    }
+  void _handleRegister() async {  
+  if (!_formKey.currentState!.validate()) return;
+  if (_loaiHinh == null) {
+    _showSnack('Vui lòng chọn loại hình công ty');
+    return;
+  }
 
-    // Kiểm tra email trùng
-    if (GlobalData.emailExists(_emailCtrl.text.trim())) {
-      _showSnack('Email này đã được đăng ký');
-      return;
-    }
+  // Kiểm tra email trùng
+  if (GlobalData.emailExists(_emailCtrl.text.trim())) {
+    _showSnack('Email này đã được đăng ký');
+    return;
+  }
 
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    userProvider.createEmployerAccount(
-      email: _emailCtrl.text.trim(),
-      password: _passCtrl.text.trim(),
-      phone: _sdtCtrl.text.trim(),
-      companyName: _tenCtyCtrl.text.trim(),
-      address: _diaChiCtrl.text.trim(),
-      taxCode: _mstCtrl.text.trim(),
-      representative: _nguoiDDCtrl.text.trim(),
-      businessType: _loaiHinh!,
-    );
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  await userProvider.createEmployerAccount( 
+    email: _emailCtrl.text.trim(),
+    password: _passCtrl.text.trim(),
+    phone: _sdtCtrl.text.trim(),
+    companyName: _tenCtyCtrl.text.trim(),
+    address: _diaChiCtrl.text.trim(),
+    taxCode: _mstCtrl.text.trim(),
+    representative: _nguoiDDCtrl.text.trim(),
+    businessType: _loaiHinh!,
+  );
 
-    // Hiển thị thông báo thành công và chuyển thẳng vào app
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('🎉 Đăng ký thành công!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  // Hiển thị thông báo thành công và chuyển thẳng vào app
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('🎉 Đăng ký thành công!'),
+      backgroundColor: Colors.green,
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
 
-    Navigator.pushNamedAndRemoveUntil(context, '/employer-home', (route) => false);
+  Navigator.pushNamedAndRemoveUntil(context, '/employer-home', (route) => false);
   }
 
   void _showSnack(String msg) {

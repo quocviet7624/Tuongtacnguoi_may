@@ -28,28 +28,27 @@ class _RegisterSvStep1ScreenState extends State<RegisterSvStep1Screen> {
     super.dispose();
   }
 
-  void _next() {
-    if (!_formKey.currentState!.validate()) return;
+  void _next() async {  
+  if (!_formKey.currentState!.validate()) return;
 
-    if (GlobalData.emailExists(_emailCtrl.text.trim())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email này đã được đăng ký'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    // Tạo tài khoản tạm - lưu vào Provider
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    userProvider.createStudentAccount(
-      email: _emailCtrl.text.trim(),
-      password: _passCtrl.text.trim(),
-      phone: _phoneCtrl.text.trim(),
+  if (GlobalData.emailExists(_emailCtrl.text.trim())) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Email này đã được đăng ký'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
+    return;
+  }
 
-    Navigator.pushNamed(context, '/register-sv-2');
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  await userProvider.createStudentAccount(  
+    email: _emailCtrl.text.trim(),
+    password: _passCtrl.text.trim(),
+    phone: _phoneCtrl.text.trim(),
+  );
+
+  Navigator.pushNamed(context, '/register-sv-2');
   }
 
   @override
