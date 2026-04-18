@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/job_model.dart';
+import '../models/global_data.dart';
+import '../providers/user_provider.dart';
 
 class JobDetailScreen extends StatelessWidget {
   const JobDetailScreen({super.key});
@@ -11,6 +14,8 @@ class JobDetailScreen extends StatelessWidget {
       return const Scaffold(body: Center(child: Text("Lỗi: Không có dữ liệu công việc")));
     }
     final job = args as Job;
+    final currentUser = Provider.of<UserProvider>(context).currentUser;
+    final isStudent = currentUser?.role.toString() == 'UserRole.sinhVien';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -73,28 +78,30 @@ class JobDetailScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GestureDetector(
-          onTap: () {
-            Navigator.pushNamed(
-              context, 
-              '/ung-tuyen', 
-              arguments: job,
-            );
-          },
-          child: Container(
-            height: 60,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF7526),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Center(
-              child: Text("Ứng tuyển ngay", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ),
-      ),
+      bottomNavigationBar: isStudent
+          ? Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context, 
+                    '/ung-tuyen', 
+                    arguments: job,
+                  );
+                },
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF7526),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Center(
+                    child: Text("Ứng tuyển ngay", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 

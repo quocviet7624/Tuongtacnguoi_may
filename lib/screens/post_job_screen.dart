@@ -289,7 +289,7 @@ class _Step2 extends StatelessWidget {
           _FieldLabel('Mức lương'),
           _InputBox(
               controller: salaryCtrl,
-              hint: 'VD: 5.000.000 - 8.000.000đ hoặc Thỏa thuận'),
+              hint: 'Nhập mức lương/giờ'),
           const SizedBox(height: 16),
           _FieldLabel('Ca làm việc'),
           Container(

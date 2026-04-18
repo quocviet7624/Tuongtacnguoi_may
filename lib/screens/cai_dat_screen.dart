@@ -269,16 +269,16 @@ class CaiDatScreen extends StatelessWidget {
                 label: 'Trung tâm hỗ trợ',
                 onTap: () => Navigator.pushNamed(context, '/help-center'),
               ),
-              _SettingsItem(
-                icon: Icons.description_outlined,
-                label: 'Điều khoản sử dụng',
-                onTap: () {},
-              ),
-              _SettingsItem(
-                icon: Icons.shield_outlined,
-                label: 'Chính sách bảo mật',
-                onTap: () {},
-              ),
+            _SettingsItem(
+              icon: Icons.description_outlined,
+              label: 'Điều khoản sử dụng',
+              onTap: () => _showTermsOfService(context), 
+            ),
+            _SettingsItem(
+              icon: Icons.shield_outlined,
+              label: 'Chính sách bảo mật',
+              onTap: () => _showPrivacyPolicy(context), 
+            ),
             ]),
 
             const SizedBox(height: 12),
@@ -404,6 +404,213 @@ class CaiDatScreen extends StatelessWidget {
       ),
     );
   }
+  void _showTermsOfService(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    builder: (ctx) => DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, controller) => Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text('Điều khoản sử dụng',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          const Divider(),
+          Expanded(
+            child: ListView(
+              controller: controller,
+              padding: const EdgeInsets.all(20),
+              children: const [
+                Text('1. Chấp nhận điều khoản',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'Khi sử dụng ViecNow, bạn đồng ý tuân thủ các điều khoản và điều kiện này. ViecNow là nền tảng kết nối sinh viên tìm việc làm thêm tại Đà Nẵng với các nhà tuyển dụng uy tín.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 20),
+                Text('2. Tài khoản người dùng',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'Bạn có trách nhiệm bảo mật thông tin tài khoản. Không được chia sẻ tài khoản với người khác. ViecNow không chịu trách nhiệm về thiệt hại do mất thông tin tài khoản.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 20),
+                Text('3. Quy tắc sử dụng',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  '• Không đăng thông tin sai lệch hoặc gian lận.\n'
+                  '• Không sử dụng nền tảng cho mục đích bất hợp pháp.\n'
+                  '• Không phân biệt đối xử trong tuyển dụng.\n'
+                  '• Tôn trọng quyền riêng tư của người dùng khác.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.8),
+                ),
+                SizedBox(height: 20),
+                Text('4. Trách nhiệm của nhà tuyển dụng',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'Nhà tuyển dụng cam kết đăng tin tuyển dụng trung thực, đúng với thực tế công việc. Mức lương và điều kiện làm việc phải rõ ràng và tuân thủ quy định pháp luật lao động Việt Nam.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 20),
+                Text('5. Giới hạn trách nhiệm',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'ViecNow chỉ là nền tảng kết nối, không chịu trách nhiệm về kết quả tuyển dụng hay chất lượng công việc. Mọi giao dịch và thỏa thuận là giữa sinh viên và nhà tuyển dụng.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 20),
+                Text('6. Thay đổi điều khoản',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'ViecNow có quyền thay đổi điều khoản bất kỳ lúc nào. Người dùng sẽ được thông báo qua email hoặc thông báo trong ứng dụng.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 32),
+                Text(
+                  'Cập nhật lần cuối: 18/04/2026',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void _showPrivacyPolicy(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    builder: (ctx) => DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, controller) => Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text('Chính sách bảo mật',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          const Divider(),
+          Expanded(
+            child: ListView(
+              controller: controller,
+              padding: const EdgeInsets.all(20),
+              children: const [
+                Text('1. Thông tin chúng tôi thu thập',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'ViecNow thu thập các thông tin sau khi bạn đăng ký:\n'
+                  '• Họ tên, email, số điện thoại\n'
+                  '• Thông tin học vấn (trường, ngành, GPA)\n'
+                  '• Kỹ năng và kinh nghiệm\n'
+                  '• Ảnh đại diện (nếu cung cấp)',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.8),
+                ),
+                SizedBox(height: 20),
+                Text('2. Mục đích sử dụng thông tin',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  '• Kết nối sinh viên với nhà tuyển dụng phù hợp.\n'
+                  '• Cải thiện trải nghiệm người dùng.\n'
+                  '• Gửi thông báo về cơ hội việc làm.\n'
+                  '• Phân tích và cải thiện dịch vụ.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.8),
+                ),
+                SizedBox(height: 20),
+                Text('3. Bảo mật thông tin',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'Chúng tôi áp dụng các biện pháp bảo mật tiêu chuẩn để bảo vệ thông tin của bạn. Dữ liệu được mã hóa và lưu trữ an toàn. Chúng tôi không bán thông tin cá nhân cho bên thứ ba.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 20),
+                Text('4. Chia sẻ thông tin',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'Thông tin hồ sơ sinh viên chỉ được chia sẻ với nhà tuyển dụng khi sinh viên chủ động ứng tuyển. Nhà tuyển dụng không thể xem thông tin liên hệ cá nhân trừ khi được cho phép.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 20),
+                Text('5. Quyền của người dùng',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  '• Quyền truy cập và chỉnh sửa thông tin cá nhân.\n'
+                  '• Quyền xóa tài khoản bất kỳ lúc nào.\n'
+                  '• Quyền từ chối nhận thông báo marketing.\n'
+                  '• Quyền yêu cầu xuất dữ liệu cá nhân.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.8),
+                ),
+                SizedBox(height: 20),
+                Text('6. Cookie và theo dõi',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'ViecNow sử dụng cookie để cải thiện trải nghiệm. Bạn có thể tắt cookie trong cài đặt trình duyệt, tuy nhiên một số tính năng có thể bị ảnh hưởng.',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                ),
+                SizedBox(height: 20),
+                Text('7. Liên hệ',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  'Nếu có thắc mắc về chính sách bảo mật, vui lòng liên hệ:\n'
+                  '📧 privacy@viecnow.vn\n'
+                  '📞 0236.xxxx.xxx\n'
+                  '📍 Đà Nẵng, Việt Nam',
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.8),
+                ),
+                SizedBox(height: 32),
+                Text(
+                  'Cập nhật lần cuối: 18/04/2026',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   void _showLanguageDialog(BuildContext context) {
     showDialog(

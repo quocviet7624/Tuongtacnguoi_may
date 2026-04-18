@@ -218,8 +218,8 @@ class _GoiPremiumScreenState extends State<GoiPremiumScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Features
-                  ...(plan['features'] as List<String>).map((f) => Padding(
+             
+                  ...(plan['features'] as List<dynamic>).cast<String>().map((f) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       children: [
@@ -230,8 +230,9 @@ class _GoiPremiumScreenState extends State<GoiPremiumScreen> {
                     ),
                   )),
 
-                  // Not included
-                  ...(plan['notIncluded'] as List<String>).map((f) => Padding(
+                
+                  ...(plan['notIncluded'] as List<dynamic>).cast<String>().map((f) => Padding(
+
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       children: [
@@ -355,43 +356,27 @@ class _GoiPremiumScreenState extends State<GoiPremiumScreen> {
   }
 
   void _handleSelectPlan(BuildContext context, int index) {
-    final plan = _plans[index];
-    if (plan['priceValue'] == 0) {
-      Navigator.pop(context);
-      return;
-    }
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 20),
-            Text('Xác nhận đăng ký ${plan['name']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            Text('Giá: ${plan['price']}', style: const TextStyle(fontSize: 16, color: Color(0xFF1976D2))),
-            const SizedBox(height: 20),
-            Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy'))),
-              const SizedBox(width: 12),
-              Expanded(child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Đăng ký ${plan['name']} thành công!'), backgroundColor: const Color(0xFF43A047)),
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: plan['color'] as Color),
-                child: const Text('Thanh toán', style: TextStyle(color: Colors.white)),
-              )),
-            ]),
-            const SizedBox(height: 12),
-          ],
-        ),
+  final plan = _plans[index];
+
+  if (plan['priceValue'] == 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Bạn đang sử dụng gói Miễn phí'),
+        backgroundColor: Colors.grey,
       ),
     );
+    return;
   }
+
+  Navigator.pushNamed(
+    context,
+    '/payment',
+    arguments: {
+      'planName': plan['name'],
+      'planPrice': plan['price'],
+      'planPriceValue': plan['priceValue'],
+      'planColor': plan['color'],
+    },
+  );
+}
 }

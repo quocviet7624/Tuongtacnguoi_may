@@ -23,7 +23,7 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
     super.dispose();
   }
 
-  void _xuLyUngTuyen(Job job) async {  // ✅ Thêm async
+  void _xuLyUngTuyen(Job job) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.currentUser;
 
@@ -39,16 +39,11 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
 
     setState(() => _isSubmitting = true);
 
-    // ✅ SỬA: Chỉ còn 2 tham số + thêm await
-    final success = await GlobalData.applyForJob(
-      job.id,
-      currentUser.email,
-    );
-
-    setState(() => _isSubmitting = false);
+    // 1. Ứng tuyển
+    final success = await GlobalData.applyForJob(job.id, currentUser.email);
 
     if (!success) {
-      // Đã ứng tuyển rồi
+      setState(() => _isSubmitting = false);
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -72,7 +67,16 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
       return;
     }
 
-    // Hiển thị thông báo thành công
+    // ✅ 2. Tạo conversation chat với nhà tuyển dụng (THÊM DÒNG NÀY)
+    GlobalData.getOrCreateConversationId(
+      currentUser.email,
+      job.employerEmail,
+      job.title,
+    );
+
+    setState(() => _isSubmitting = false);
+
+    // 3. Hiển thị thông báo thành công
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -85,7 +89,7 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
             Text("Thành công!"),
           ],
         ),
-        content: Text("Bạn đã gửi đơn ứng tuyển vào vị trí ${job.title} thành công."),
+        content: Text("Bạn đã gửi đơn ứng tuyển vào vị trí ${job.title} thành công.\n\nNhà tuyển dụng sẽ liên hệ với bạn qua mục Chat."),
         actions: [
           TextButton(
             onPressed: () {
@@ -102,7 +106,6 @@ class _UngTuyenScreenState extends State<UngTuyenScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ... giữ nguyên phần build ...
     final args = ModalRoute.of(context)?.settings.arguments;
 
     if (args == null || args is! Job) {

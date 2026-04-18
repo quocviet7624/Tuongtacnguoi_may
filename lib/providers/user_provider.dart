@@ -13,57 +13,59 @@ class UserProvider extends ChangeNotifier {
 
   AppUser? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
-  bool get isEmployer => _currentUser?.role == UserRole.nhaTuyenDung;
-  bool get isStudent => _currentUser?.role == UserRole.sinhVien;
+  bool get isEmployer =>
+      _currentUser?.role == UserRole.nhaTuyenDung;
+  bool get isStudent =>
+      _currentUser?.role == UserRole.sinhVien;
 
+  // ─── RESTORE SESSION ──────────────────────────────────────────
   void _restoreSession() {
     final saved = StorageService.loadCurrentUser();
     if (saved == null) return;
-
-    final liveUser = GlobalData.users.cast<AppUser?>().firstWhere(
-          (u) => u?.email == saved.email,
-          orElse: () => null,
-        );
-
-    _currentUser = liveUser ?? saved;
-    print('🔐 [UserProvider] Restored: ${_currentUser?.email} (${_currentUser?.role.name})');
+    // Lấy bản live từ GlobalData (có thể đã update)
+    final live = GlobalData.users
+        .cast<AppUser?>()
+        .firstWhere((u) => u?.email == saved.email,
+            orElse: () => null);
+    _currentUser = live ?? saved;
   }
 
+  // ─── ĐĂNG NHẬP ────────────────────────────────────────────────
   Future<bool> login(String email, String password) async {
     final user = GlobalData.findUser(email, password);
-    if (user != null) {
-      _currentUser = user;
-      await StorageService.saveCurrentUser(user);
-      notifyListeners();
-      return true;
-    }
-    return false;
+    if (user == null) return false;
+    _currentUser = user;
+    await StorageService.saveCurrentUser(user);
+    notifyListeners();
+    return true;
   }
 
+  // ─── ĐĂNG XUẤT ────────────────────────────────────────────────
   Future<void> logout() async {
     _currentUser = null;
     await StorageService.saveCurrentUser(null);
     notifyListeners();
   }
 
+  // ─── ĐĂNG KÝ SINH VIÊN bước 1 ────────────────────────────────
   Future<void> createStudentAccount({
     required String email,
     required String password,
     required String phone,
   }) async {
-    final newUser = AppUser(
+    final user = AppUser(
       email: email,
       password: password,
       role: UserRole.sinhVien,
       phone: phone,
     );
-    await GlobalData.addUser(newUser);
-    _currentUser = newUser;
-    await StorageService.saveCurrentUser(newUser);
+    await GlobalData.addUser(user);
+    _currentUser = user;
+    await StorageService.saveCurrentUser(user);
     notifyListeners();
-    print('✅ [UserProvider] Created student: $email');
   }
 
+  // ─── ĐĂNG KÝ SINH VIÊN bước 2 ────────────────────────────────
   Future<void> updateStudentInfo({
     required String fullName,
     required String school,
@@ -76,9 +78,9 @@ class UserProvider extends ChangeNotifier {
     _currentUser!.major = major;
     _currentUser!.gpa = gpa;
     await _persist();
-    notifyListeners();
   }
 
+  // ─── ĐĂNG KÝ SINH VIÊN bước 3 ────────────────────────────────
   Future<void> updateFinalStep({
     required List<String> newSkills,
     File? newAvatar,
@@ -93,9 +95,9 @@ class UserProvider extends ChangeNotifier {
     _currentUser!.salaryMax = salaryMax;
     _currentUser!.availableTime = availableTime;
     await _persist();
-    notifyListeners();
   }
 
+  // ─── ĐĂNG KÝ NHÀ TUYỂN DỤNG ──────────────────────────────────
   Future<void> createEmployerAccount({
     required String email,
     required String password,
@@ -106,7 +108,7 @@ class UserProvider extends ChangeNotifier {
     required String representative,
     required String businessType,
   }) async {
-    final newUser = AppUser(
+    final user = AppUser(
       email: email,
       password: password,
       role: UserRole.nhaTuyenDung,
@@ -118,13 +120,13 @@ class UserProvider extends ChangeNotifier {
       representative: representative,
       businessType: businessType,
     );
-    await GlobalData.addUser(newUser);
-    _currentUser = newUser;
-    await StorageService.saveCurrentUser(newUser);
+    await GlobalData.addUser(user);
+    _currentUser = user;
+    await StorageService.saveCurrentUser(user);
     notifyListeners();
-    print('✅ [UserProvider] Created employer: $email');
   }
 
+  // ─── CẬP NHẬT HỒ SƠ ──────────────────────────────────────────
   Future<void> updateProfile({
     String? fullName,
     String? phone,
@@ -140,7 +142,6 @@ class UserProvider extends ChangeNotifier {
     String? businessType,
   }) async {
     if (_currentUser == null) return;
-
     if (fullName != null) _currentUser!.fullName = fullName;
     if (phone != null) _currentUser!.phone = phone;
     if (school != null) _currentUser!.school = school;
@@ -153,16 +154,20 @@ class UserProvider extends ChangeNotifier {
     if (taxCode != null) _currentUser!.taxCode = taxCode;
     if (representative != null) _currentUser!.representative = representative;
     if (businessType != null) _currentUser!.businessType = businessType;
-
     await _persist();
+  }
+
+  // ─── PERSIST: lưu cả currentUser lẫn list users ───────────────
+  Future<void> _persist() async {
+    if (_currentUser == null) return;
+    // Cập nhật trong GlobalData.users
+    final idx = GlobalData.users
+        .indexWhere((u) => u.email == _currentUser!.email);
+    if (idx != -1) {
+      GlobalData.users[idx] = _currentUser!;
+    }
+    await StorageService.saveUsers(GlobalData.users);
+    await StorageService.saveCurrentUser(_currentUser);
     notifyListeners();
   }
-
-  Future<void> _persist() async {
-    await StorageService.saveCurrentUser(_currentUser);
-    await StorageService.saveUsers(GlobalData.users);
-    print('💾 [UserProvider] Persisted user: ${_currentUser?.email}');
-  }
-
-  Future<void> saveUsers() => _persist();
 }

@@ -1,4 +1,3 @@
-// screens/job_search_screen.dart
 import 'package:flutter/material.dart';
 import '../models/global_data.dart';
 import '../models/job_model.dart';
@@ -14,17 +13,84 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // ── Trạng thái bộ lọc hiện tại ──────────────────────────────
+  Map<String, dynamic>? _activeFilter;
+
+  bool get _hasFilter =>
+      _activeFilter != null &&
+      (_activeFilter!['areas'] as List).isNotEmpty ||
+      (_activeFilter != null &&
+          (_activeFilter!['shifts'] as List).isNotEmpty);
+
   List<Job> get _filteredJobs {
-    final allJobs = GlobalData.getAllJobs();
-    if (_searchQuery.isEmpty) return allJobs;
-    
-    return allJobs.where((job) {
-      return job.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          job.company.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          job.location.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          job.category.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
+    var jobs = GlobalData.getAllJobs();
+
+    // Lọc theo từ khóa tìm kiếm
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      jobs = jobs.where((job) {
+        return job.title.toLowerCase().contains(q) ||
+            job.company.toLowerCase().contains(q) ||
+            job.location.toLowerCase().contains(q) ||
+            job.category.toLowerCase().contains(q);
+      }).toList();
+    }
+
+    // Lọc theo bộ lọc
+    if (_activeFilter != null) {
+      final type = _activeFilter!['type'] as String?;
+      final salaryMin = _activeFilter!['salaryMin'] as double?;
+      final salaryMax = _activeFilter!['salaryMax'] as double?;
+      final areas = (_activeFilter!['areas'] as List).cast<String>();
+      final shifts = (_activeFilter!['shifts'] as List).cast<String>();
+
+      jobs = jobs.where((job) {
+        // Lọc loại công việc
+        if (type != null && type.isNotEmpty) {
+          // So sánh linh hoạt: shift của job chứa type hoặc ngược lại
+          final jobShift = job.shift.toLowerCase();
+          final filterType = type.toLowerCase();
+          if (!jobShift.contains(filterType) &&
+              !filterType.contains(jobShift)) {
+            return false;
+          }
+        }
+
+        // Lọc khu vực (nếu có chọn)
+        if (areas.isNotEmpty) {
+          final jobLoc = job.location.toLowerCase();
+          final matchArea = areas.any(
+              (a) => jobLoc.contains(a.toLowerCase()));
+          if (!matchArea) return false;
+        }
+
+        // Lọc ca làm (nếu có chọn) — so theo category hoặc description
+        if (shifts.isNotEmpty) {
+          final jobText =
+              '${job.description} ${job.shift} ${job.category}'.toLowerCase();
+          final matchShift = shifts.any(
+              (s) => jobText.contains(s.toLowerCase()));
+          if (!matchShift) return false;
+        }
+
+        return true;
+      }).toList();
+    }
+
+    return jobs;
   }
+
+  Future<void> _openFilter() async {
+    final result = await Navigator.pushNamed(
+      context,
+      '/job-filter',
+    );
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() => _activeFilter = result);
+    }
+  }
+
+  void _clearFilter() => setState(() => _activeFilter = null);
 
   @override
   void dispose() {
@@ -34,6 +100,8 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final jobs = _filteredJobs;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -56,9 +124,9 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
       ),
       body: Column(
         children: [
-          // Thanh tìm kiếm
+          // ── Thanh tìm kiếm ────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(25, 20, 25, 20),
+            padding: const EdgeInsets.fromLTRB(25, 20, 25, 0),
             child: Container(
               height: 63,
               decoration: BoxDecoration(
@@ -74,7 +142,8 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      onChanged: (value) => setState(() => _searchQuery = value),
+                      onChanged: (v) =>
+                          setState(() => _searchQuery = v),
                       decoration: const InputDecoration(
                         hintText: 'Tìm kiếm công việc ...',
                         border: InputBorder.none,
@@ -87,29 +156,142 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
                       ),
                     ),
                   ),
-                  const Icon(Icons.tune, size: 32, color: Colors.black54),
-                  const SizedBox(width: 20),
+                  // ✅ Nút lọc — đổi màu khi đang có filter
+                  GestureDetector(
+                    onTap: _openFilter,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: _activeFilter != null
+                            ? const Color(0xFF004E94)
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.tune,
+                        size: 28,
+                        color: _activeFilter != null
+                            ? Colors.white
+                            : Colors.black54,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
                 ],
               ),
             ),
           ),
 
-          // Danh sách kết quả
+          // ✅ Tag bộ lọc đang áp dụng
+          if (_activeFilter != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 36,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                scrollDirection: Axis.horizontal,
+                children: [
+                  // Loại công việc
+                  _FilterTag(
+                    label: _activeFilter!['type'] as String,
+                    color: const Color(0xFF004E94),
+                  ),
+                  // Khu vực
+                  ...(_activeFilter!['areas'] as List<dynamic>)
+                      .cast<String>()
+                      .map((a) => _FilterTag(label: a)),
+                  // Ca làm
+                  ...(_activeFilter!['shifts'] as List<dynamic>)
+                      .cast<String>()
+                      .map((s) => _FilterTag(label: s)),
+                  // Xóa tất cả
+                  GestureDetector(
+                    onTap: _clearFilter,
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.close,
+                              size: 14, color: Colors.red.shade400),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Xóa lọc',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.red.shade400,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 16),
+
+          // ── Số kết quả ────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Tìm thấy ${jobs.length} việc làm',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // ── Danh sách kết quả ─────────────────────────────────
           Expanded(
-            child: _filteredJobs.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Không tìm thấy công việc nào',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+            child: jobs.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off,
+                            size: 64, color: Colors.grey.shade300),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Không tìm thấy công việc nào',
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                        if (_activeFilter != null) ...[
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: _clearFilter,
+                            child: const Text('Xóa bộ lọc',
+                                style:
+                                    TextStyle(color: Color(0xFF004E94))),
+                          ),
+                        ],
+                      ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 25),
-                    itemCount: _filteredJobs.length,
-                    itemBuilder: (context, index) {
-                      final job = _filteredJobs[index];
-                      return _buildJobCard(job);
-                    },
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 25),
+                    itemCount: jobs.length,
+                    itemBuilder: (context, index) =>
+                        _buildJobCard(jobs[index]),
                   ),
           ),
         ],
@@ -119,7 +301,8 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
 
   Widget _buildJobCard(Job job) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/job-detail', arguments: job),
+      onTap: () =>
+          Navigator.pushNamed(context, '/job-detail', arguments: job),
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),
         decoration: BoxDecoration(
@@ -175,11 +358,13 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
                 ],
               ),
             ),
+            // Badge danh mục
             Positioned(
               left: 8,
               top: 6,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFF7200),
                   borderRadius: BorderRadius.circular(4),
@@ -188,14 +373,67 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
                   job.category,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 14,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
             ),
+            // Badge ca làm
+            Positioned(
+              right: 12,
+              top: 6,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF004E94).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  job.shift,
+                  style: const TextStyle(
+                    color: Color(0xFF004E94),
+                    fontSize: 12,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Filter tag widget ────────────────────────────────────────────────────────
+class _FilterTag extends StatelessWidget {
+  final String label;
+  final Color? color;
+
+  const _FilterTag({required this.label, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? const Color(0xFF6B7280);
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: c.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: c.withOpacity(0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: c,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

@@ -4,7 +4,7 @@ enum UserRole { sinhVien, nhaTuyenDung }
 
 class AppUser {
   final String email;
-  final String password;
+  String password;
   final UserRole role;
 
   String? fullName;

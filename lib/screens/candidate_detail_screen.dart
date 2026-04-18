@@ -10,8 +10,9 @@ class CandidateDetailScreen extends StatelessWidget {
 
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
-    if (parts.length >= 2)
+    if (parts.length >= 2) {
       return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
     return name.isNotEmpty ? name[0].toUpperCase() : 'U';
   }
 
@@ -27,18 +28,35 @@ class CandidateDetailScreen extends StatelessWidget {
     return colors[name.hashCode.abs() % colors.length];
   }
 
+  String _formatSalary(double? min, double? max) {
+    String fmt(double v) {
+      if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+      if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)}K';
+      return v.toStringAsFixed(0);
+    }
+
+    if (min == null && max == null) return 'Thỏa thuận';
+    if (min != null && max != null) return '${fmt(min)} - ${fmt(max)} VNĐ';
+    if (min != null) return 'Từ ${fmt(min)} VNĐ';
+    return 'Đến ${fmt(max!)} VNĐ';
+  }
+
+  String _currentTime() {
+    final now = DateTime.now();
+    return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments
-        as Map<String, dynamic>;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final AppUser candidate = args['user'] as AppUser;
     final Job job = args['job'] as Job;
 
-    // ✅ Dùng displayName getter — không bao giờ null
+    // ✅ Sử dụng getter displayName (luôn non-null)
     final displayName = candidate.displayName;
     final avatarColor = _getColor(displayName);
-    final userProvider =
-        Provider.of<UserProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     void openChat() {
       final currentUser = userProvider.currentUser!;
@@ -55,6 +73,10 @@ class CandidateDetailScreen extends StatelessWidget {
           'participant1': currentUser.email,
           'participant2': candidate.email,
           'jobTitle': job.title,
+          'name': displayName,
+          'avatar': _getInitials(displayName),
+          'avatarColor': avatarColor,
+          'isOnline': false,
         },
       );
     }
@@ -81,20 +103,18 @@ class CandidateDetailScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Header card ──────────────────────────────────────────────
+            // ── Avatar + tên ─────────────────────────────────────────────
             Container(
               width: double.infinity,
               color: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                  vertical: 28, horizontal: 20),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
               child: Column(
                 children: [
-                  // ✅ Dùng avatarFile getter từ model
                   candidate.avatarFile != null
                       ? CircleAvatar(
                           radius: 44,
-                          backgroundImage:
-                              FileImage(candidate.avatarFile!),
+                          backgroundImage: FileImage(candidate.avatarFile!),
                         )
                       : CircleAvatar(
                           radius: 44,
@@ -116,19 +136,16 @@ class CandidateDetailScreen extends StatelessWidget {
                         color: Color(0xFF111827)),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    candidate.email,
-                    style: const TextStyle(
-                        fontSize: 13, color: Color(0xFF9CA3AF)),
-                  ),
-                  // ✅ Dùng ?. để check phone nullable
-                  if (candidate.phone?.isNotEmpty == true) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      candidate.phone!,
+                  Text(candidate.email,
                       style: const TextStyle(
-                          fontSize: 13, color: Color(0xFF9CA3AF)),
-                    ),
+                          fontSize: 13, color: Color(0xFF9CA3AF))),
+                  // ✅ Fix null check cho phone
+                  if (candidate.phone != null &&
+                      candidate.phone!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(candidate.phone!,
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFF9CA3AF))),
                   ],
                   const SizedBox(height: 10),
                   Container(
@@ -156,16 +173,16 @@ class CandidateDetailScreen extends StatelessWidget {
             _Section(
               title: 'Thông tin học vấn',
               children: [
-                _Row(
+                _InfoRow(
                     icon: Icons.school_outlined,
                     label: 'Trường',
                     value: candidate.school ?? 'Chưa cập nhật'),
-                _Row(
+                _InfoRow(
                     icon: Icons.book_outlined,
                     label: 'Ngành',
                     value: candidate.major ?? 'Chưa cập nhật'),
                 if (candidate.gpa != null)
-                  _Row(
+                  _InfoRow(
                     icon: Icons.star_outline,
                     label: 'GPA',
                     value: candidate.gpa!.toStringAsFixed(2),
@@ -177,8 +194,7 @@ class CandidateDetailScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             // ── Kỹ năng ───────────────────────────────────────────────────
-            if (candidate.skills != null &&
-                candidate.skills!.isNotEmpty) ...[
+            if (candidate.skills != null && candidate.skills!.isNotEmpty) ...[
               Container(
                 width: double.infinity,
                 color: Colors.white,
@@ -186,13 +202,11 @@ class CandidateDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Kỹ năng',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF111827)),
-                    ),
+                    const Text('Kỹ năng',
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF111827))),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
@@ -204,16 +218,14 @@ class CandidateDetailScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFFF0F9FF),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: const Color(0xFFBAE6FD)),
+                            border:
+                                Border.all(color: const Color(0xFFBAE6FD)),
                           ),
-                          child: Text(
-                            skill,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF0369A1),
-                                fontWeight: FontWeight.w500),
-                          ),
+                          child: Text(skill,
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF0369A1),
+                                  fontWeight: FontWeight.w500)),
                         );
                       }).toList(),
                     ),
@@ -224,12 +236,11 @@ class CandidateDetailScreen extends StatelessWidget {
             ],
 
             // ── Kỳ vọng lương ─────────────────────────────────────────────
-            if (candidate.salaryMin != null ||
-                candidate.salaryMax != null) ...[
+            if (candidate.salaryMin != null || candidate.salaryMax != null) ...[
               _Section(
-                title: 'Kỳ vọng lương',
+                title: 'Kỳ vọng',
                 children: [
-                  _Row(
+                  _InfoRow(
                     icon: Icons.payments_outlined,
                     label: 'Mức lương',
                     value: _formatSalary(
@@ -237,9 +248,9 @@ class CandidateDetailScreen extends StatelessWidget {
                   ),
                   if (candidate.availableTime != null &&
                       candidate.availableTime!.isNotEmpty)
-                    _Row(
+                    _InfoRow(
                       icon: Icons.access_time_outlined,
-                      label: 'Thời gian có thể làm',
+                      label: 'Thời gian',
                       value: candidate.availableTime!.join(', '),
                     ),
                 ],
@@ -249,21 +260,21 @@ class CandidateDetailScreen extends StatelessWidget {
 
             // ── Vị trí ứng tuyển ──────────────────────────────────────────
             _Section(
-              title: 'Thông tin việc làm ứng tuyển',
+              title: 'Vị trí ứng tuyển',
               children: [
-                _Row(
+                _InfoRow(
                     icon: Icons.work_outline,
                     label: 'Vị trí',
                     value: job.title),
-                _Row(
+                _InfoRow(
                     icon: Icons.business_outlined,
                     label: 'Công ty',
                     value: job.company),
-                _Row(
+                _InfoRow(
                     icon: Icons.location_on_outlined,
                     label: 'Địa điểm',
                     value: job.location),
-                _Row(
+                _InfoRow(
                     icon: Icons.attach_money,
                     label: 'Lương',
                     value: job.salary),
@@ -272,7 +283,7 @@ class CandidateDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // ── Actions ───────────────────────────────────────────────────
+            // ── Nút hành động ─────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -280,43 +291,35 @@ class CandidateDetailScreen extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: openChat,
-                      icon: const Icon(Icons.chat_bubble_outline,
-                          size: 18),
+                      icon: const Icon(Icons.chat_bubble_outline, size: 18),
                       label: const Text('Nhắn tin',
-                          style:
-                              TextStyle(fontWeight: FontWeight.w600)),
+                          style: TextStyle(fontWeight: FontWeight.w600)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFEB7E35),
-                        side: const BorderSide(
-                            color: Color(0xFFEB7E35)),
+                        side: const BorderSide(color: Color(0xFFEB7E35)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      // ✅ displayName là String, không cần ép kiểu
-                      onPressed: () =>
-                          _showInterviewDialog(context, displayName),
+                      onPressed: () => _showInterviewDialog(
+                          context, candidate, job, displayName, userProvider),
                       icon: const Icon(Icons.calendar_today,
                           size: 18, color: Colors.white),
-                      label: const Text(
-                        'Hẹn phỏng vấn',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13),
-                      ),
+                      label: const Text('Hẹn phỏng vấn',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1976D2),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
@@ -330,46 +333,155 @@ class CandidateDetailScreen extends StatelessWidget {
     );
   }
 
-  String _formatSalary(double? min, double? max) {
-    if (min == null && max == null) return 'Thỏa thuận';
-    if (min != null && max != null)
-      return '${_fmt(min)} - ${_fmt(max)} VNĐ/giờ';
-    if (min != null) return 'Từ ${_fmt(min)} VNĐ/giờ';
-    return 'Đến ${_fmt(max!)} VNĐ/giờ';
-  }
+  // ── Dialog hẹn phỏng vấn ─────────────────────────────────────────────────
+  void _showInterviewDialog(
+    BuildContext context,
+    AppUser candidate,
+    Job job,
+    String displayName, // ✅ luôn là String, không null
+    UserProvider userProvider,
+  ) {
+    final dateCtrl = TextEditingController();
+    final timeCtrl = TextEditingController();
+    final locationCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    final currentUser = userProvider.currentUser;
 
-  String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)}K';
-    return v.toStringAsFixed(0);
-  }
-
-  void _showInterviewDialog(BuildContext context, String name) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Text('Hẹn phỏng vấn với $name'),
-        content: const Text(
-            'Chức năng đặt lịch phỏng vấn. Bạn muốn xem lịch phỏng vấn?'),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Hẹn phỏng vấn với $displayName',
+          style:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _DialogField(
+                  controller: dateCtrl,
+                  label: 'Ngày phỏng vấn *',
+                  hint: 'VD: 20/05/2026',
+                  icon: Icons.calendar_today),
+              const SizedBox(height: 12),
+              _DialogField(
+                  controller: timeCtrl,
+                  label: 'Giờ phỏng vấn *',
+                  hint: 'VD: 9:00 - 10:00',
+                  icon: Icons.access_time),
+              const SizedBox(height: 12),
+              _DialogField(
+                  controller: locationCtrl,
+                  label: 'Địa điểm *',
+                  hint: 'VD: Tầng 3, Tòa nhà ABC, Đà Nẵng',
+                  icon: Icons.location_on_outlined),
+              const SizedBox(height: 12),
+              _DialogField(
+                  controller: noteCtrl,
+                  label: 'Ghi chú (tùy chọn)',
+                  hint: 'VD: Mang theo CV bản cứng',
+                  icon: Icons.note_outlined),
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy',
-                style: TextStyle(color: Colors.grey)),
+            child:
+                const Text('Hủy', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pushNamed(context, '/interview-schedule');
+            onPressed: () async {
+              // ✅ Validate
+              if (dateCtrl.text.trim().isEmpty ||
+                  timeCtrl.text.trim().isEmpty ||
+                  locationCtrl.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Vui lòng điền đủ ngày, giờ và địa điểm!'),
+                    backgroundColor: Colors.orange,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+
+              final noteText = noteCtrl.text.trim();
+
+              // ✅ Tạo object lịch phỏng vấn
+              final interview = {
+                'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                'candidateEmail': candidate.email,
+                'candidateName': displayName,
+                'employerEmail': currentUser?.email ?? '',
+                'companyName': currentUser?.companyName ??
+                    currentUser?.fullName ??
+                    '',
+                'jobTitle': job.title,
+                'date': dateCtrl.text.trim(),
+                'time': timeCtrl.text.trim(),
+                'location': locationCtrl.text.trim(),
+                'note': noteText,
+                'status': 'Chờ xác nhận',
+                'createdAt': DateTime.now().toIso8601String(),
+              };
+
+              // ✅ Lưu vào GlobalData
+              await GlobalData.addInterview(interview);
+
+              // ✅ Gửi tin nhắn thông báo qua chat
+              final convId = GlobalData.getOrCreateConversationId(
+                currentUser?.email ?? '',
+                candidate.email,
+                job.title,
+              );
+
+              final msgNote = noteText.isNotEmpty
+                  ? '\n📝 Ghi chú: $noteText'
+                  : '';
+
+              final msg = {
+                'text': '📅 Lịch phỏng vấn\n'
+                    '💼 Vị trí: ${job.title}\n'
+                    '🗓 Ngày: ${dateCtrl.text.trim()}\n'
+                    '⏰ Giờ: ${timeCtrl.text.trim()}\n'
+                    '📍 Địa điểm: ${locationCtrl.text.trim()}'
+                    '$msgNote\n\n'
+                    'Vui lòng xác nhận tham dự nhé! 🙏',
+                'isMe': false,
+                'sender': currentUser?.email ?? '',
+                'senderName': currentUser?.companyName ??
+                    currentUser?.fullName ??
+                    '',
+                'time': _currentTime(),
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+                'type': 'interview_invite',
+              };
+
+              await GlobalData.addMessage(convId, msg);
+
+              // ✅ Đóng dialog trước, rồi hiện snackbar
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        '✅ Đã gửi lịch phỏng vấn cho $displayName!'),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEB7E35),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Xem lịch',
+            child: const Text('Gửi lịch',
                 style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -378,7 +490,9 @@ class CandidateDetailScreen extends StatelessWidget {
   }
 }
 
-// ── Shared widgets ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// WIDGET HỖ TRỢ
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _Section extends StatelessWidget {
   final String title;
@@ -395,13 +509,11 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF111827)),
-          ),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF111827))),
           const SizedBox(height: 12),
           ...children,
         ],
@@ -410,13 +522,13 @@ class _Section extends StatelessWidget {
   }
 }
 
-class _Row extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
   final Color? valueColor;
 
-  const _Row({
+  const _InfoRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -433,12 +545,10 @@ class _Row extends StatelessWidget {
           Icon(icon, size: 16, color: const Color(0xFF9CA3AF)),
           const SizedBox(width: 10),
           SizedBox(
-            width: 80,
-            child: Text(
-              label,
-              style: const TextStyle(
-                  fontSize: 13, color: Color(0xFF6B7280)),
-            ),
+            width: 76,
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 13, color: Color(0xFF6B7280))),
           ),
           Expanded(
             child: Text(
@@ -451,6 +561,40 @@ class _Row extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DialogField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final IconData icon;
+
+  const _DialogField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 20, color: const Color(0xFFEB7E35)),
+        border:
+            OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFEB7E35)),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
     );
   }

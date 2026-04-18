@@ -1,28 +1,56 @@
 import 'package:flutter/material.dart';
 
-class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+class PaymentConfirmScreen extends StatefulWidget {
+  const PaymentConfirmScreen({super.key});
 
   @override
-  State<PaymentScreen> createState() => _PaymentScreenState();
+  State<PaymentConfirmScreen> createState() => _PaymentConfirmScreenState();
 }
 
-class _PaymentScreenState extends State<PaymentScreen> {
-  String _selected = 'momo';
+class _PaymentConfirmScreenState extends State<PaymentConfirmScreen> {
+  bool _agreed = false;
+  String _planName = '';
+  String _planPrice = '';
+  int _planPriceValue = 0;
+  String _paymentMethod = '';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map) {
+      _planName = args['planName'] ?? '';
+      _planPrice = args['planPrice'] ?? '';
+      _planPriceValue = args['planPriceValue'] ?? 0;
+      _paymentMethod = args['paymentMethod'] ?? 'momo';
+    }
+  }
+
+  String get _paymentMethodLabel {
+    switch (_paymentMethod) {
+      case 'momo':    return 'MoMo';
+      case 'zalopay': return 'ZaloPay';
+      case 'bank':    return 'Thẻ ngân hàng';
+      default:        return 'MoMo';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Phương thức thanh toán',
-            style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.w700)),
+        title: const Text('Xác nhận thanh toán',
+            style: TextStyle(
+                color: Color(0xFF0056A3),
+                fontSize: 18,
+                fontWeight: FontWeight.w700)),
         centerTitle: true,
       ),
       body: Padding(
@@ -31,10 +59,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            // Gói đã chọn
+            const Text('Tóm tắt đơn hàng',
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+
+            // ── Chi tiết đơn ─────────────────────────────────────────
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -42,71 +75,114 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Gói đã chọn:', style: TextStyle(color: Color(0xFF666666), fontSize: 16)),
-                  SizedBox(height: 4),
-                  Text('Sinh Viên Pro', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                  SizedBox(height: 4),
-                  Text('Tổng tiền: 29.000đ',
-                      style: TextStyle(color: Color(0xFFFF7D20), fontSize: 18, fontWeight: FontWeight.w700)),
+                children: [
+                  Text('Gói: $_planName',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  Text('Phương thức: $_paymentMethodLabel',
+                      style: const TextStyle(
+                          color: Color(0xFF64748B), fontSize: 14)),
+                  const Divider(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Tổng cộng:',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(
+                        _planPrice,
+                        style: const TextStyle(
+                            color: Color(0xFFFF4D00),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-            const Text('Chọn phương thức',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            _buildOption('momo', 'Momo', Icons.account_balance_wallet, const Color(0xFFAE2070)),
+            const SizedBox(height: 20),
+
+            // ── Checkbox đồng ý ──────────────────────────────────────
+            Row(
+              children: [
+                Checkbox(
+                  value: _agreed,
+                  activeColor: const Color(0xFFEB7E35),
+                  onChanged: (v) => setState(() => _agreed = v ?? false),
+                ),
+                const Expanded(
+                  child: Text('Tôi đồng ý với các điều khoản dịch vụ',
+                      style: TextStyle(
+                          color: Color(0xFF475569), fontSize: 14)),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
-            _buildOption('zalopay', 'ZaloPay', Icons.payment, const Color(0xFF0068FF)),
-            const SizedBox(height: 12),
-            _buildOption('bank', 'Thẻ ngân hàng', Icons.credit_card, const Color(0xFF374151)),
+
+            // ── Bảo mật ──────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
+                  Column(children: [
+                    Icon(Icons.lock, color: Color(0xFF0056A3)),
+                    SizedBox(height: 4),
+                    Text('SSL', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    Text('SECURE', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                  ]),
+                  Column(children: [
+                    Icon(Icons.security, color: Color(0xFF0056A3)),
+                    SizedBox(height: 4),
+                    Text('MÃ HÓA', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    Text('256-bit', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                  ]),
+                  Column(children: [
+                    Icon(Icons.verified_user, color: Color(0xFF0056A3)),
+                    SizedBox(height: 4),
+                    Text('AN TOÀN', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    Text('100%', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                  ]),
+                ],
+              ),
+            ),
+
             const Spacer(),
+
+            // ── Nút thanh toán ───────────────────────────────────────
             SizedBox(
               width: double.infinity,
-              height: 56,
+              height: 52,
               child: ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/payment-confirm'),
+                onPressed: _agreed
+                    ? () => Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/payment-success',
+                          (r) => r.settings.name == '/student-home' ||
+                              r.settings.name == '/employer-home',
+                          arguments: {'planName': _planName},
+                        )
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEB7E35),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                  disabledBackgroundColor: Colors.grey.shade300,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Tiếp tục',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                child: const Text('THANH TOÁN NGAY',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700)),
               ),
             ),
             const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOption(String value, String label, IconData icon, Color color) {
-    final bool isSelected = _selected == value;
-    return GestureDetector(
-      onTap: () => setState(() => _selected = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? const Color(0xFFEB7E35) : const Color(0xFFE5E7EB),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(width: 16),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400)),
-            const Spacer(),
-            if (isSelected)
-              const Icon(Icons.check_circle, color: Color(0xFFEB7E35)),
           ],
         ),
       ),
