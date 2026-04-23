@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../models/global_data.dart';
 import '../models/job_model.dart';
+import 'ung_tuyen_detail_screen.dart';
 
 class ViecDaUngTuyenScreen extends StatelessWidget {
   const ViecDaUngTuyenScreen({super.key});
@@ -12,9 +13,8 @@ class ViecDaUngTuyenScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final currentUser = userProvider.currentUser;
-    
-    // Lấy danh sách job đã ứng tuyển từ GlobalData
-    final appliedJobs = currentUser != null 
+
+    final appliedJobs = currentUser != null
         ? GlobalData.getAppliedJobs(currentUser.email)
         : <Job>[];
 
@@ -45,52 +45,78 @@ class ViecDaUngTuyenScreen extends StatelessWidget {
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final job = appliedJobs[index];
-                return _buildJobCard(job);
+                return _buildJobCard(context, job);
               },
             ),
     );
   }
 
-  Widget _buildJobCard(Job job) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [const BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildJobCard(BuildContext context, Job job) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => UngTuyenDetailScreen(job: job),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [const BoxShadow(color: Colors.black12, blurRadius: 4)],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(job.title,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Text(job.company,
+                      style: const TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 4),
+                  Text(job.salary,
+                      style: const TextStyle(
+                          color: Color(0xFFEB7E35),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(job.title,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 6),
-                Text(job.company,
-                    style: const TextStyle(color: Colors.grey)),
-                const SizedBox(height: 4),
-                Text(job.salary,
-                    style: const TextStyle(
-                        color: Color(0xFFEB7E35),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEBBA1B),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text("Đang xem xét",
+                      style: TextStyle(color: Colors.white, fontSize: 12)),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Xem chi tiết →',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFA9D0E9),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEBBA1B),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text("Đang xem xét",
-                style: TextStyle(color: Colors.white, fontSize: 12)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
